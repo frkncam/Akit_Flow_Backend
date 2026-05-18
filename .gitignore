@@ -1,0 +1,14 @@
+# Local dev runtime artefacts (start-all.sh / stop-all.sh)
+logs/
+.pids
+
+# IntelliJ
+.idea/
+*.iml
+
+# Maven build output
+**/target/
+
+# OS
+.DS_Store
+Thumbs.db

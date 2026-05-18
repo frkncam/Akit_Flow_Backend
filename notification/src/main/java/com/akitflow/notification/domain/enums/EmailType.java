@@ -1,0 +1,13 @@
+package com.akitflow.notification.domain.enums;
+
+public enum EmailType {
+    WELCOME,
+    INVITE,
+    MEMBER_JOINED,
+    CONTRACT_CREATED,
+    CONTRACT_STATUS_CHANGED,
+    CONTRACT_EXPIRING_SOON,
+    CONTRACT_SIGNATURE_REQUESTED,
+    CONTRACT_SIGNED,
+    CONTRACT_SIGNATURE_REJECTED
+}

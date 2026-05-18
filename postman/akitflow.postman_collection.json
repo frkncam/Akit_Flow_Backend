@@ -1,0 +1,688 @@
+{
+  "info": {
+    "name": "AkitFlow - Backend APIs",
+    "description": "AkitFlow tüm backend servisleri için Postman koleksiyonu. Tüm istekler api-gateway (8080) üzerinden gider. Gateway JWT'yi doğrular, X-User-Id/X-Org-Id header'larını downstream servislere geçirir. Direkt servise erişim için authDirectUrl/contractDirectUrl/notificationDirectUrl variable'ları da var (debug amaçlı). Register/Login/Refresh sonrası token'lar; Contract Create sonrası contractId; File Upload sonrası fileId otomatik kaydedilir.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "a1b2c3d4-akitflow-backend-0001"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080", "type": "string", "description": "Gateway entry point — tüm public istekler buradan" },
+    { "key": "authDirectUrl", "value": "http://localhost:8081", "type": "string", "description": "Auth servise direkt erişim (debug; JWKS endpoint için)" },
+    { "key": "contractDirectUrl", "value": "http://localhost:8083", "type": "string", "description": "Contract servise direkt erişim (debug)" },
+    { "key": "notificationDirectUrl", "value": "http://localhost:8082", "type": "string", "description": "Notification servise direkt erişim (debug)" },
+    { "key": "eurekaUrl", "value": "http://localhost:8761", "type": "string", "description": "Eureka dashboard" },
+    { "key": "accessToken", "value": "", "type": "string" },
+    { "key": "refreshToken", "value": "", "type": "string" },
+    { "key": "inviteToken", "value": "", "type": "string" },
+    { "key": "contractId", "value": "", "type": "string" },
+    { "key": "fileId", "value": "", "type": "string" },
+    { "key": "templateId", "value": "", "type": "string" },
+    { "key": "signatureToken", "value": "", "type": "string", "description": "send-for-signature response'undan ilk signer'ın token'ı otomatik set edilir" },
+    { "key": "signatureToken2", "value": "", "type": "string", "description": "İkinci signer'ın token'ı (varsa)" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register (Organization + Owner)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/register", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user\": {\n    \"email\": \"furkan@demirhukuk.com\",\n    \"firstName\": \"Furkan\",\n    \"lastName\": \"Demir\",\n    \"organization\": {\n      \"name\": \"Demir Hukuk Bürosu\"\n    }\n  },\n  \"password\": \"Sifre123!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const j = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', j.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', j.refreshToken);",
+                  "  pm.test('tokens set', () => {",
+                  "    pm.expect(j.accessToken).to.be.a('string');",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"furkan@demirhukuk.com\",\n  \"password\": \"Sifre123!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', j.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', j.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/refresh", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","refresh"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', j.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', j.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/logout", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","logout"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Invite User (OWNER/ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/invite", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","invite"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"yeni.uye@demirhukuk.com\",\n  \"role\": \"MEMBER\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Accept Invite",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/invite/accept", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","invite","accept"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{inviteToken}}\",\n  \"firstName\": \"Yeni\",\n  \"lastName\": \"Uye\",\n  \"password\": \"Sifre123!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const j = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', j.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', j.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Organization",
+      "item": [
+        {
+          "name": "Get My Organization",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/organizations/me", "host": ["{{baseUrl}}"], "path": ["api","v1","organizations","me"] }
+          }
+        },
+        {
+          "name": "Update My Organization (OWNER)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/organizations/me", "host": ["{{baseUrl}}"], "path": ["api","v1","organizations","me"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Demir & Ortakları Hukuk Bürosu\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Members",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/organizations/me/members", "host": ["{{baseUrl}}"], "path": ["api","v1","organizations","me","members"] }
+          }
+        },
+        {
+          "name": "Update Member Role (OWNER)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/organizations/me/members/2/role", "host": ["{{baseUrl}}"], "path": ["api","v1","organizations","me","members","2","role"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"ADMIN\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Remove Member (OWNER/ADMIN)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/organizations/me/members/2", "host": ["{{baseUrl}}"], "path": ["api","v1","organizations","me","members","2"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/users/me", "host": ["{{baseUrl}}"], "path": ["api","v1","users","me"] }
+          }
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/users/me", "host": ["{{baseUrl}}"], "path": ["api","v1","users","me"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Furkan\",\n  \"lastName\": \"Demir\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/users/me/password", "host": ["{{baseUrl}}"], "path": ["api","v1","users","me","password"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"Sifre123!\",\n  \"newPassword\": \"YeniSifre456!\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contract",
+      "item": [
+        {
+          "name": "Create Contract",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/contracts", "host": ["{{baseUrl}}"], "path": ["api","v1","contracts"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Vekalet Sözleşmesi - Ahmet Yılmaz\",\n  \"description\": \"Boşanma davası vekalet sözleşmesi\",\n  \"contractType\": \"VEKALETNAME\",\n  \"parties\": [\n    { \"name\": \"Ahmet Yılmaz\", \"role\": \"MUVEKKIL\", \"email\": \"ahmet@example.com\" },\n    { \"name\": \"Av. Furkan Demir\", \"role\": \"AVUKAT\", \"email\": \"furkan@demirhukuk.com\" }\n  ],\n  \"startDate\": \"2026-05-16\",\n  \"endDate\": \"2027-05-16\",\n  \"value\": 25000.00,\n  \"currency\": \"TRY\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const j = pm.response.json();",
+                  "  pm.collectionVariables.set('contractId', j.id);",
+                  "  pm.test('contractId set', () => pm.expect(j.id).to.be.a('number'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Contracts (Paged)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/contracts?page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","contracts"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Contract By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/contracts/{{contractId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","contracts","{{contractId}}"] }
+          }
+        },
+        {
+          "name": "Update Contract",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/contracts/{{contractId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","contracts","{{contractId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Boşanma davası + nafaka takibi vekalet sözleşmesi\",\n  \"value\": 30000.00\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Status -> PENDING_SIGNATURE",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/contracts/{{contractId}}/status", "host": ["{{baseUrl}}"], "path": ["api","v1","contracts","{{contractId}}","status"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PENDING_SIGNATURE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Status -> ACTIVE",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/contracts/{{contractId}}/status", "host": ["{{baseUrl}}"], "path": ["api","v1","contracts","{{contractId}}","status"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACTIVE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Status -> TERMINATED",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/contracts/{{contractId}}/status", "host": ["{{baseUrl}}"], "path": ["api","v1","contracts","{{contractId}}","status"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"TERMINATED\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Send For Signature",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/contracts/{{contractId}}/send-for-signature", "host": ["{{baseUrl}}"], "path": ["api","v1","contracts","{{contractId}}","send-for-signature"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileId\": {{fileId}},\n  \"signers\": [\n    { \"name\": \"Ahmet Yılmaz\", \"email\": \"ahmet@example.com\" },\n    { \"name\": \"Mehmet Demir\", \"email\": \"mehmet@example.com\" }\n  ]\n}"
+            },
+            "description": "Contract DRAFT veya PENDING_SIGNATURE'da olmalı. Yeniden gönderim eski PENDING signature'ları CANCELLED yapar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 202) {",
+                  "  const arr = pm.response.json();",
+                  "  if (Array.isArray(arr) && arr.length > 0) {",
+                  "    // signatureToken'lar pm.test üzerinden DB üzerinden manuel doldurulmalı —",
+                  "    // response'ta token field'ı dönmez (güvenlik gereği). Mailpit'teki link'ten kopyala.",
+                  "    pm.test('signature row count = signer count', () => pm.expect(arr.length).to.be.at.least(1));",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Contract Signatures",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/contracts/{{contractId}}/signatures", "host": ["{{baseUrl}}"], "path": ["api","v1","contracts","{{contractId}}","signatures"] }
+          }
+        },
+        {
+          "name": "Delete Contract",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/contracts/{{contractId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","contracts","{{contractId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Signature (Public - No Auth)",
+      "description": "Signer'ın e-postada aldığı link'ten gelen public endpoint'ler. JWT gerektirmez. {{signatureToken}}'ı Mailpit'teki linkten manuel kopyala (response'ta token gizlidir).",
+      "item": [
+        {
+          "name": "View Signature",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/signatures/{{signatureToken}}", "host": ["{{baseUrl}}"], "path": ["api","v1","signatures","{{signatureToken}}"] }
+          }
+        },
+        {
+          "name": "Accept Signature",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/signatures/{{signatureToken}}/accept", "host": ["{{baseUrl}}"], "path": ["api","v1","signatures","{{signatureToken}}","accept"] }
+          }
+        },
+        {
+          "name": "Reject Signature",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/signatures/{{signatureToken}}/reject", "host": ["{{baseUrl}}"], "path": ["api","v1","signatures","{{signatureToken}}","reject"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Bedel maddesi üzerinde mutabık değiliz.\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contract Templates",
+      "item": [
+        {
+          "name": "Create Template",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/contract-templates", "host": ["{{baseUrl}}"], "path": ["api","v1","contract-templates"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Vekalet Sözleşmesi\",\n  \"description\": \"Standart vekaletname şablonu\",\n  \"content\": \"<!DOCTYPE html><html><head><meta charset='UTF-8'><style>body{font-family:Arial,sans-serif;padding:40px;}h1{text-align:center;}table{width:100%;margin-top:20px;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;text-align:left;}</style></head><body><h1>VEKALETNAME</h1><p><strong>Sözleşme Başlığı:</strong> <span th:text='${contract.title}'>X</span></p><p><strong>Açıklama:</strong> <span th:text='${contract.description}'>X</span></p><p><strong>Başlangıç:</strong> <span th:text='${contract.startDate}'>X</span> | <strong>Bitiş:</strong> <span th:text='${contract.endDate}'>X</span></p><p><strong>Değer:</strong> <span th:text='${contract.value}'>0</span> <span th:text='${contract.currency}'>TRY</span></p><h3>Taraflar</h3><table><thead><tr><th>İsim</th><th>Rol</th><th>E-posta</th></tr></thead><tbody><tr th:each='p : ${contract.parties}'><td th:text='${p.name}'>X</td><td th:text='${p.role}'>X</td><td th:text='${p.email}'>X</td></tr></tbody></table><p style='margin-top:40px;text-align:right;color:#888;font-size:12px;'>Üretildi: <span th:text='${generatedAt}'>2026-01-01</span></p></body></html>\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const j = pm.response.json();",
+                  "  pm.collectionVariables.set('templateId', j.id);",
+                  "  pm.test('templateId set', () => pm.expect(j.id).to.be.a('number'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Templates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/contract-templates", "host": ["{{baseUrl}}"], "path": ["api","v1","contract-templates"] }
+          }
+        },
+        {
+          "name": "Get Template By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/contract-templates/{{templateId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","contract-templates","{{templateId}}"] }
+          }
+        },
+        {
+          "name": "Update Template",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/contract-templates/{{templateId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","contract-templates","{{templateId}}"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Güncellenmiş vekaletname şablonu\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Template",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/contract-templates/{{templateId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","contract-templates","{{templateId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contract Files",
+      "item": [
+        {
+          "name": "Upload File (Multipart)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/contracts/{{contractId}}/files", "host": ["{{baseUrl}}"], "path": ["api","v1","contracts","{{contractId}}","files"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Yüklenecek sözleşme dosyası (PDF/DOCX). Postman'de Body > form-data > file alanına dosya seç."
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const j = pm.response.json();",
+                  "  pm.collectionVariables.set('fileId', j.id);",
+                  "  pm.test('fileId set', () => pm.expect(j.id).to.be.a('number'));",
+                  "  pm.test('downloadUrl present', () => pm.expect(j.downloadUrl).to.be.a('string'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Generate PDF From Template",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/contracts/{{contractId}}/files/generate-pdf?templateId={{templateId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","contracts","{{contractId}}","files","generate-pdf"],
+              "query": [
+                { "key": "templateId", "value": "{{templateId}}", "description": "Template id (Contract Templates → Create sonrası otomatik set)" }
+              ]
+            },
+            "description": "Belirtilen template ile sözleşmenin verilerini birleştirip PDF üretir. Üretilen PDF MinIO'ya yüklenir ve ContractFile olarak kaydedilir."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const j = pm.response.json();",
+                  "  pm.collectionVariables.set('fileId', j.id);",
+                  "  pm.test('fileId set', () => pm.expect(j.id).to.be.a('number'));",
+                  "  pm.test('downloadUrl present', () => pm.expect(j.downloadUrl).to.be.a('string'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Contract Files",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/contracts/{{contractId}}/files", "host": ["{{baseUrl}}"], "path": ["api","v1","contracts","{{contractId}}","files"] }
+          }
+        },
+        {
+          "name": "Get File (Pre-signed Download URL)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/contracts/{{contractId}}/files/{{fileId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","contracts","{{contractId}}","files","{{fileId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notification (Email Audit)",
+      "item": [
+        {
+          "name": "List Email Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/notifications/emails", "host": ["{{baseUrl}}"], "path": ["api","v1","notifications","emails"] }
+          }
+        },
+        {
+          "name": "List Email Logs (Filter by Status)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/emails?status=SENT",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","notifications","emails"],
+              "query": [
+                { "key": "status", "value": "SENT", "description": "SENT | FAILED" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Email Log By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/notifications/emails/1", "host": ["{{baseUrl}}"], "path": ["api","v1","notifications","emails","1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Infrastructure",
+      "item": [
+        {
+          "name": "JWKS (Public Key)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/oauth2/jwks", "host": ["{{baseUrl}}"], "path": ["oauth2","jwks"] },
+            "description": "Gateway'in JWT doğrulamak için kullandığı public key set. Auth-service'ten serve edilir, gateway üzerinden de erişilebilir."
+          }
+        },
+        {
+          "name": "Gateway Health",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/actuator/health", "host": ["{{baseUrl}}"], "path": ["actuator","health"] }
+          }
+        },
+        {
+          "name": "Gateway Routes (Actuator)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/actuator/gateway/routes", "host": ["{{baseUrl}}"], "path": ["actuator","gateway","routes"] },
+            "description": "Aktif gateway route'larını gösterir."
+          }
+        },
+        {
+          "name": "Eureka Apps (Dashboard)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{eurekaUrl}}/eureka/apps", "host": ["{{eurekaUrl}}"], "path": ["eureka","apps"] },
+            "description": "Eureka'ya kayıtlı tüm servisleri JSON olarak getirir. UI için tarayıcıdan http://localhost:8761 aç."
+          }
+        }
+      ]
+    }
+  ]
+}

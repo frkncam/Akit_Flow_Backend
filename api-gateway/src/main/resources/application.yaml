@@ -1,0 +1,93 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: auth-route
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/v1/auth/**,/api/v1/users/**,/api/v1/organizations/**,/oauth2/jwks
+        - id: contract-route
+          uri: lb://contract-service
+          predicates:
+            - Path=/api/v1/contracts/**,/api/v1/contract-templates/**,/api/v1/signatures/**
+        - id: notification-route
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/v1/notifications/**
+        # OpenAPI aggregation routes — gateway swagger-ui dropdown'a göre downstream'lere proxy
+        - id: auth-api-docs
+          uri: lb://auth-service
+          predicates:
+            - Path=/v3/api-docs/auth
+          filters:
+            - SetPath=/v3/api-docs
+        - id: contract-api-docs
+          uri: lb://contract-service
+          predicates:
+            - Path=/v3/api-docs/contract
+          filters:
+            - SetPath=/v3/api-docs
+        - id: notification-api-docs
+          uri: lb://notification-service
+          predicates:
+            - Path=/v3/api-docs/notification
+          filters:
+            - SetPath=/v3/api-docs
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"
+              - "http://localhost:19006"
+              - "http://localhost:8081"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:8081/oauth2/jwks
+
+server:
+  port: 8080
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoint:
+    gateway:
+      access: unrestricted
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+
+springdoc:
+  # api-docs.enabled'i AÇIK bırak: Swagger UI'nın swagger-config endpoint'i için gerekli.
+  # Gateway'in kendi /v3/api-docs'u boş bir OpenAPI dokümanı döner (controller yok),
+  # ama dropdown'daki URL'ler downstream'lere proxylenir.
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: Auth Service
+        url: /v3/api-docs/auth
+      - name: Contract Service
+        url: /v3/api-docs/contract
+      - name: Notification Service
+        url: /v3/api-docs/notification
+    operations-sorter: alpha
+    tags-sorter: alpha
+    disable-swagger-default-url: true   # Boş gateway api-docs'u dropdown'a koymasın
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    com.akitflow.gateway: DEBUG
