@@ -11,7 +11,15 @@ spring:
         - id: contract-route
           uri: lb://contract-service
           predicates:
-            - Path=/api/v1/contracts/**,/api/v1/contract-templates/**,/api/v1/signatures/**
+            - Path=/api/v1/contracts/**
+        - id: template-route
+          uri: lb://template-service
+          predicates:
+            - Path=/api/v1/templates/**
+        - id: signature-route
+          uri: lb://signature-service
+          predicates:
+            - Path=/api/v1/signatures/**,/sign/**
         - id: notification-route
           uri: lb://notification-service
           predicates:
@@ -27,6 +35,18 @@ spring:
           uri: lb://contract-service
           predicates:
             - Path=/v3/api-docs/contract
+          filters:
+            - SetPath=/v3/api-docs
+        - id: template-api-docs
+          uri: lb://template-service
+          predicates:
+            - Path=/v3/api-docs/template
+          filters:
+            - SetPath=/v3/api-docs
+        - id: signature-api-docs
+          uri: lb://signature-service
+          predicates:
+            - Path=/v3/api-docs/signature
           filters:
             - SetPath=/v3/api-docs
         - id: notification-api-docs
@@ -81,6 +101,10 @@ springdoc:
         url: /v3/api-docs/auth
       - name: Contract Service
         url: /v3/api-docs/contract
+      - name: Template Service
+        url: /v3/api-docs/template
+      - name: Signature Service
+        url: /v3/api-docs/signature
       - name: Notification Service
         url: /v3/api-docs/notification
     operations-sorter: alpha

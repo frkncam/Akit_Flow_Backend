@@ -1,0 +1,65 @@
+spring:
+  application:
+    name: signature-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/akitflow
+    username: akitflow
+    password: akitflow
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.default_schema: signature_schema
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    default-schema: signature_schema
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+server:
+  port: 8087
+
+eureka:
+  client:
+    enabled: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+app:
+  minio:
+    url: http://localhost:9000
+    access-key: minioadmin
+    secret-key: minioadmin
+    bucket: akitflow-contracts
+    presigned-url-expiry-minutes: 10
+  signature:
+    certificate:
+      validity-years: 5
+      key-size: 2048
+      algorithm: SHA256withRSA
+    appearance:
+      margin: 50
+      box-width: 240
+      box-height: 70
+      font-size: 8
+      timezone: Europe/Istanbul
+      label-tr: "DIGITAL OLARAK IMZALANMISTIR"
+      label-en: "DIGITALLY SIGNED"
+    token:
+      validity-days: 7
+
+logging:
+  level:
+    com.akitflow.signature: DEBUG

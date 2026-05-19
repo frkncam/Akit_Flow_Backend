@@ -1,16 +1,21 @@
 package com.akitflow.contract.controller;
 
+import com.akitflow.contract.client.SignatureClient;
+import com.akitflow.contract.domain.Contract;
+import com.akitflow.contract.domain.ContractFile;
+import com.akitflow.contract.domain.enums.ContractStatus;
 import com.akitflow.contract.dto.request.ContractCreateRequest;
 import com.akitflow.contract.dto.request.ContractStatusUpdateRequest;
 import com.akitflow.contract.dto.request.ContractUpdateRequest;
 import com.akitflow.contract.dto.request.SendForSignatureRequest;
 import com.akitflow.contract.dto.response.ContractResponse;
-import com.akitflow.contract.dto.response.ContractSignatureResponse;
 import com.akitflow.contract.dto.response.PageResponse;
+import com.akitflow.contract.exception.InvalidContractStateTransitionException;
+import com.akitflow.contract.exception.ResourceNotFoundException;
+import com.akitflow.contract.repository.ContractFileRepository;
+import com.akitflow.contract.repository.ContractRepository;
 import com.akitflow.contract.security.HeaderPrincipal;
 import com.akitflow.contract.service.ContractService;
-import com.akitflow.contract.service.SignaturePublicViewService;
-import com.akitflow.contract.service.SignatureRequestService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -19,14 +24,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/contracts")
 @RequiredArgsConstructor
 public class ContractController {
 
     private final ContractService contractService;
-    private final SignatureRequestService signatureRequestService;
-    private final SignaturePublicViewService signatureViewService;
+    private final ContractRepository contractRepository;
+    private final ContractFileRepository fileRepository;
+    private final SignatureClient signatureClient;
 
     @PostMapping
     public ResponseEntity<ContractResponse> create(@Valid @RequestBody ContractCreateRequest request,
@@ -68,17 +76,46 @@ public class ContractController {
     }
 
     @PostMapping("/{id}/send-for-signature")
-    public ResponseEntity<java.util.List<ContractSignatureResponse>> sendForSignature(
+    public ResponseEntity<List<SignatureClient.SignatureDto>> sendForSignature(
             @PathVariable Long id,
             @Valid @RequestBody SendForSignatureRequest request,
             @AuthenticationPrincipal HeaderPrincipal user) {
-        return ResponseEntity.accepted().body(signatureRequestService.sendForSignature(id, request, user));
+
+        Contract contract = contractRepository.findByIdAndOrganizationId(id, user.organizationId())
+                .orElseThrow(() -> new ResourceNotFoundException("Contract not found: id=" + id));
+
+        if (contract.getStatus() != ContractStatus.DRAFT
+                && contract.getStatus() != ContractStatus.PENDING_SIGNATURE) {
+            throw new InvalidContractStateTransitionException(
+                    contract.getStatus(), ContractStatus.PENDING_SIGNATURE);
+        }
+
+        ContractFile file = fileRepository.findById(request.fileId())
+                .orElseThrow(() -> new ResourceNotFoundException("File not found: id=" + request.fileId()));
+        if (!file.getContract().getId().equals(id)) {
+            throw new ResourceNotFoundException("File does not belong to this contract: id=" + request.fileId());
+        }
+
+        var batchRequest = new SignatureClient.BatchSignatureRequest(
+                contract.getId(),
+                contract.getTitle(),
+                file.getId(),
+                file.getStorageKey(),
+                file.getFileName(),
+                user.organizationId(),
+                request.signers().stream()
+                        .map(s -> new SignatureClient.SignerRequest(s.name(), s.email()))
+                        .toList()
+        );
+
+        return ResponseEntity.accepted().body(
+                signatureClient.sendForSignature(batchRequest, user.userId(), user.organizationId(), user.email()));
     }
 
     @GetMapping("/{id}/signatures")
-    public java.util.List<ContractSignatureResponse> listSignatures(
+    public List<SignatureClient.SignatureDto> listSignatures(
             @PathVariable Long id,
             @AuthenticationPrincipal HeaderPrincipal user) {
-        return signatureViewService.listForContract(id, user);
+        return signatureClient.listForContract(id, user.organizationId());
     }
 }

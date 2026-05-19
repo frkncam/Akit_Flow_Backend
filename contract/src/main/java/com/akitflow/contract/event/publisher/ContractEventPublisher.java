@@ -4,9 +4,6 @@ import com.akitflow.contract.config.RabbitMQConfig;
 import com.akitflow.contract.event.ContractEvent;
 import com.akitflow.contract.event.payload.ContractCreatedPayload;
 import com.akitflow.contract.event.payload.ContractExpiringSoonPayload;
-import com.akitflow.contract.event.payload.ContractSignatureRejectedPayload;
-import com.akitflow.contract.event.payload.ContractSignatureRequestedPayload;
-import com.akitflow.contract.event.payload.ContractSignedPayload;
 import com.akitflow.contract.event.payload.ContractStatusChangedPayload;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,25 +29,13 @@ public class ContractEventPublisher {
         publish(RabbitMQConfig.RK_CONTRACT_EXPIRING_SOON, organizationId, actorId, payload);
     }
 
-    public void publishSignatureRequested(Long organizationId, Long actorId, ContractSignatureRequestedPayload payload) {
-        publish(RabbitMQConfig.RK_CONTRACT_SIGNATURE_REQUESTED, organizationId, actorId, payload);
-    }
-
-    public void publishContractSigned(Long organizationId, Long actorId, ContractSignedPayload payload) {
-        publish(RabbitMQConfig.RK_CONTRACT_SIGNED, organizationId, actorId, payload);
-    }
-
-    public void publishSignatureRejected(Long organizationId, Long actorId, ContractSignatureRejectedPayload payload) {
-        publish(RabbitMQConfig.RK_CONTRACT_SIGNATURE_REJECTED, organizationId, actorId, payload);
-    }
-
     private <T> void publish(String routingKey, Long organizationId, Long actorId, T payload) {
         try {
             ContractEvent<T> event = ContractEvent.of(routingKey, organizationId, actorId, payload);
             rabbitTemplate.convertAndSend(RabbitMQConfig.CONTRACT_EXCHANGE, routingKey, event);
-            log.debug("Event yayınlandı: {} eventId={}", routingKey, event.eventId());
+            log.debug("Event published: {} eventId={}", routingKey, event.eventId());
         } catch (Exception e) {
-            log.error("Event yayını başarısız ({}): {}", routingKey, e.getMessage(), e);
+            log.error("Event publish failed ({}): {}", routingKey, e.getMessage(), e);
         }
     }
 }
