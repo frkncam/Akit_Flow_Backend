@@ -1,16 +1,16 @@
 package com.akitflow.contract.service;
 
+import com.akitflow.contract.client.TemplateClient;
+import com.akitflow.contract.client.TemplateClient.TemplateDto;
+import com.akitflow.contract.client.TemplateClient.VariableDto;
 import com.akitflow.contract.domain.Contract;
 import com.akitflow.contract.domain.ContractFile;
-import com.akitflow.contract.domain.ContractTemplate;
-import com.akitflow.contract.domain.TemplateVariableData;
 import com.akitflow.contract.dto.request.GeneratePdfRequest;
 import com.akitflow.contract.dto.response.ContractFileResponse;
 import com.akitflow.contract.exception.ResourceNotFoundException;
 import com.akitflow.contract.mapper.ContractFileMapper;
 import com.akitflow.contract.repository.ContractFileRepository;
 import com.akitflow.contract.repository.ContractRepository;
-import com.akitflow.contract.repository.ContractTemplateRepository;
 import com.akitflow.contract.security.HeaderPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,19 +23,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
 public class ContractPdfServiceImpl implements ContractPdfService {
 
+    private static final Pattern PLACEHOLDER = Pattern.compile("\\{\\{\\s*([a-z][a-z0-9_]*)\\s*\\}\\}");
+
     private final ContractRepository contractRepository;
-    private final ContractTemplateRepository templateRepository;
     private final ContractFileRepository fileRepository;
     private final ContractFileMapper fileMapper;
     private final PdfRenderingService pdfRenderingService;
     private final PartyJsonService partyJsonService;
     private final MinioService minioService;
-    private final TemplateRenderer templateRenderer;
+    private final TemplateClient templateClient;
 
     @Override
     @Transactional
@@ -47,21 +50,23 @@ public class ContractPdfServiceImpl implements ContractPdfService {
 
         Contract contract = contractRepository.findByIdAndOrganizationId(contractId, orgId)
                 .orElseThrow(() -> new ResourceNotFoundException("Sözleşme bulunamadı: id=" + contractId));
-        ContractTemplate template = templateRepository.findByIdAndOrganizationId(templateId, orgId)
-                .orElseThrow(() -> new ResourceNotFoundException("Template bulunamadı: id=" + templateId));
+        TemplateDto template = templateClient.getTemplate(templateId, orgId);
+        if (template == null) {
+            throw new ResourceNotFoundException("Template bulunamadı: id=" + templateId);
+        }
 
         Map<String, Object> contractView = buildContractView(contract);
         Map<String, String> systemBindings = flattenForBinding(contractView);
 
-        List<TemplateVariableData> variables = template.getVariables() != null
-                ? template.getVariables()
+        List<VariableDto> variables = template.variables() != null
+                ? template.variables()
                 : Collections.emptyList();
         Map<String, String> customValues = body != null && body.customValues() != null
                 ? body.customValues()
                 : Collections.emptyMap();
-        Map<String, String> resolved = templateRenderer.resolveValues(variables, systemBindings, customValues);
+        Map<String, String> resolved = resolveValues(variables, systemBindings, customValues);
 
-        String substituted = templateRenderer.substitute(template.getBodyHtml(), resolved);
+        String substituted = substitute(template.bodyHtml(), resolved);
 
         Map<String, Object> thymeleafModel = new HashMap<>();
         thymeleafModel.put("contract", contractView);
@@ -71,7 +76,7 @@ public class ContractPdfServiceImpl implements ContractPdfService {
         byte[] pdf = pdfRenderingService.htmlToPdf(html);
 
         int nextVersion = fileRepository.findMaxVersionByContractId(contractId) + 1;
-        String safeTpl = template.getName().replaceAll("[^A-Za-z0-9._-]", "_");
+        String safeTpl = template.name().replaceAll("[^A-Za-z0-9._-]", "_");
         String storageKey = "%d/%d/v%d-template-%s.pdf".formatted(orgId, contractId, nextVersion, safeTpl);
         String fileName = safeTpl + ".pdf";
 
@@ -88,6 +93,40 @@ public class ContractPdfServiceImpl implements ContractPdfService {
                 .build());
 
         return withDownloadUrl(saved);
+    }
+
+    private Map<String, String> resolveValues(List<VariableDto> variables,
+                                              Map<String, String> systemBindings,
+                                              Map<String, String> customValues) {
+        Map<String, String> resolved = new HashMap<>();
+        for (VariableDto v : variables) {
+            String value = null;
+            if (customValues.containsKey(v.key())) {
+                value = customValues.get(v.key());
+            } else if ("SYSTEM".equals(v.source()) && v.systemBinding() != null
+                    && systemBindings.containsKey(v.systemBinding())) {
+                value = systemBindings.get(v.systemBinding());
+            } else if (v.defaultValue() != null) {
+                value = v.defaultValue();
+            }
+            if (value != null) {
+                resolved.put(v.key(), value);
+            }
+        }
+        return resolved;
+    }
+
+    private String substitute(String source, Map<String, String> values) {
+        if (source == null || source.isEmpty()) return source;
+        Matcher m = PLACEHOLDER.matcher(source);
+        StringBuilder out = new StringBuilder();
+        while (m.find()) {
+            String key = m.group(1);
+            String replacement = values.get(key);
+            m.appendReplacement(out, Matcher.quoteReplacement(replacement != null ? replacement : m.group(0)));
+        }
+        m.appendTail(out);
+        return out.toString();
     }
 
     private Map<String, Object> buildContractView(Contract c) {

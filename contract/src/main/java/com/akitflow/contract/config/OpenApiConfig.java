@@ -19,15 +19,14 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("AkitFlow Contract Service")
                         .version("v1")
-                        .description("Contracts, templates, files, e-signature workflow."))
+                        .description("Contracts, files, and PDF generation."))
                 .components(new Components()
                         .addSecuritySchemes(SECURITY_SCHEME_NAME, new SecurityScheme()
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
                                 .bearerFormat("JWT")
                                 .description("Gateway tarafından doğrulanan JWT. "
-                                        + "POST /api/v1/auth/login'den accessToken alıp Authorize butonuna girin. "
-                                        + "Public signature endpoint'leri (/api/v1/signatures/**) token gerektirmez.")))
+                                        + "POST /api/v1/auth/login'den accessToken alıp Authorize butonuna girin.")))
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME));
     }
 }

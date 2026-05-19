@@ -1,0 +1,16 @@
+package com.akitflow.signature.dto.response;
+
+import com.akitflow.signature.domain.enums.SignatureStatus;
+
+import java.time.Instant;
+
+public record SignatureViewResponse(
+        String contractTitle,
+        String signerName,
+        String signerEmail,
+        String pdfUrl,
+        String signedPdfUrl,
+        Instant expiresAt,
+        SignatureStatus status,
+        String signatureMetadata
+) {}

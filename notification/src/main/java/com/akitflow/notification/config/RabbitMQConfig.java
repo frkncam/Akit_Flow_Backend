@@ -13,6 +13,7 @@ public class RabbitMQConfig {
 
     public static final String AUTH_EXCHANGE = "auth.exchange";
     public static final String CONTRACT_EXCHANGE = "contract.exchange";
+    public static final String SIGNATURE_EXCHANGE = "signature.exchange";
     public static final String DLX = "notification.dlx";
 
     public static final String Q_USER_REGISTERED = "notification.user.registered";
@@ -24,6 +25,9 @@ public class RabbitMQConfig {
     public static final String Q_CONTRACT_SIGNATURE_REQUESTED = "notification.contract.signature.requested";
     public static final String Q_CONTRACT_SIGNED = "notification.contract.signed";
     public static final String Q_CONTRACT_SIGNATURE_REJECTED = "notification.contract.signature.rejected";
+    public static final String Q_SIGNATURE_REQUESTED = "notification.signature.requested";
+    public static final String Q_SIGNATURE_BATCH_COMPLETED = "notification.signature.batch.completed";
+    public static final String Q_SIGNATURE_BATCH_REJECTED = "notification.signature.batch.rejected";
     public static final String Q_DLQ = "notification.dlq";
 
     private static final String DLQ_ROUTING_KEY = "dlq";
@@ -36,6 +40,11 @@ public class RabbitMQConfig {
     @Bean
     public TopicExchange contractExchange() {
         return ExchangeBuilder.topicExchange(CONTRACT_EXCHANGE).durable(true).build();
+    }
+
+    @Bean
+    public TopicExchange signatureExchange() {
+        return ExchangeBuilder.topicExchange(SIGNATURE_EXCHANGE).durable(true).build();
     }
 
     @Bean
@@ -116,6 +125,30 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue signatureRequestedQueue() {
+        return QueueBuilder.durable(Q_SIGNATURE_REQUESTED)
+                .withArgument("x-dead-letter-exchange", DLX)
+                .withArgument("x-dead-letter-routing-key", DLQ_ROUTING_KEY)
+                .build();
+    }
+
+    @Bean
+    public Queue signatureBatchCompletedQueue() {
+        return QueueBuilder.durable(Q_SIGNATURE_BATCH_COMPLETED)
+                .withArgument("x-dead-letter-exchange", DLX)
+                .withArgument("x-dead-letter-routing-key", DLQ_ROUTING_KEY)
+                .build();
+    }
+
+    @Bean
+    public Queue signatureBatchRejectedQueue() {
+        return QueueBuilder.durable(Q_SIGNATURE_BATCH_REJECTED)
+                .withArgument("x-dead-letter-exchange", DLX)
+                .withArgument("x-dead-letter-routing-key", DLQ_ROUTING_KEY)
+                .build();
+    }
+
+    @Bean
     public Queue deadLetterQueue() {
         return QueueBuilder.durable(Q_DLQ).build();
     }
@@ -163,6 +196,21 @@ public class RabbitMQConfig {
     @Bean
     public Binding bindContractSignatureRejected(Queue contractSignatureRejectedQueue, TopicExchange contractExchange) {
         return BindingBuilder.bind(contractSignatureRejectedQueue).to(contractExchange).with("contract.signature.rejected");
+    }
+
+    @Bean
+    public Binding bindSignatureRequested(Queue signatureRequestedQueue, TopicExchange signatureExchange) {
+        return BindingBuilder.bind(signatureRequestedQueue).to(signatureExchange).with("signature.requested");
+    }
+
+    @Bean
+    public Binding bindSignatureBatchCompleted(Queue signatureBatchCompletedQueue, TopicExchange signatureExchange) {
+        return BindingBuilder.bind(signatureBatchCompletedQueue).to(signatureExchange).with("signature.batch.completed");
+    }
+
+    @Bean
+    public Binding bindSignatureBatchRejected(Queue signatureBatchRejectedQueue, TopicExchange signatureExchange) {
+        return BindingBuilder.bind(signatureBatchRejectedQueue).to(signatureExchange).with("signature.batch.rejected");
     }
 
     @Bean

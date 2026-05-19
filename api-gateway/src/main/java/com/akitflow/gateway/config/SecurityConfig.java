@@ -31,12 +31,12 @@ public class SecurityConfig {
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/refresh",
                                 "/api/v1/auth/invite/accept",
-                                "/api/v1/signatures/**"
+                                "/sign/**"
                         ).permitAll()
                         .pathMatchers(HttpMethod.GET,
                                 "/oauth2/jwks",
                                 "/actuator/**",
-                                "/api/v1/signatures/**",
+                                "/sign/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
