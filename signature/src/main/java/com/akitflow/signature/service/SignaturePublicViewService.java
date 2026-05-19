@@ -9,5 +9,5 @@ public interface SignaturePublicViewService {
 
     SignatureViewResponse getByToken(String token);
 
-    List<SignatureResponse> listForContract(Long contractId);
+    List<SignatureResponse> listForContract(Long contractId, Long organizationId);
 }

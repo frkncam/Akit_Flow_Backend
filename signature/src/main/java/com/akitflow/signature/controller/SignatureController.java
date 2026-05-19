@@ -26,14 +26,15 @@ public class SignatureController {
     private final SignatureDecisionService decisionService;
 
     @PostMapping("/batch")
-    public List<SignatureResponse> sendForSignature(@Valid @RequestBody BatchSignatureRequest request) {
-        return requestService.sendForSignature(request);
+    public List<SignatureResponse> sendForSignature(@Valid @RequestBody BatchSignatureRequest request,
+                                                    @AuthenticationPrincipal HeaderPrincipal user) {
+        return requestService.sendForSignature(request, user.organizationId());
     }
 
     @GetMapping("/contracts/{contractId}")
     public List<SignatureResponse> listForContract(@PathVariable Long contractId,
                                                    @AuthenticationPrincipal HeaderPrincipal user) {
-        return viewService.listForContract(contractId);
+        return viewService.listForContract(contractId, user.organizationId());
     }
 
     @GetMapping("/{token}")

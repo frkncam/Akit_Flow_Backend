@@ -14,6 +14,5 @@ public record BatchSignatureRequest(
         @NotNull Long fileId,
         @NotBlank String fileStorageKey,
         @NotBlank @Size(max = 255) String fileName,
-        @NotNull Long organizationId,
         @Valid @NotEmpty List<SignerRequest> signers
 ) {}

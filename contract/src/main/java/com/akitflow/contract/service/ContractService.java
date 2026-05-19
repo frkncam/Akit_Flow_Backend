@@ -3,10 +3,14 @@ package com.akitflow.contract.service;
 import com.akitflow.contract.domain.enums.ContractStatus;
 import com.akitflow.contract.dto.request.ContractCreateRequest;
 import com.akitflow.contract.dto.request.ContractUpdateRequest;
+import com.akitflow.contract.dto.request.SendForSignatureRequest;
 import com.akitflow.contract.dto.response.ContractResponse;
+import com.akitflow.contract.dto.response.SignatureSummaryResponse;
 import com.akitflow.contract.security.HeaderPrincipal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 public interface ContractService {
 
@@ -21,4 +25,8 @@ public interface ContractService {
     ContractResponse updateStatus(Long id, ContractStatus newStatus, HeaderPrincipal user);
 
     void delete(Long id, HeaderPrincipal user);
+
+    List<SignatureSummaryResponse> sendForSignature(Long id, SendForSignatureRequest request, HeaderPrincipal user);
+
+    List<SignatureSummaryResponse> listSignatures(Long id, HeaderPrincipal user);
 }

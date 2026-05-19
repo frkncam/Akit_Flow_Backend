@@ -47,8 +47,8 @@ public class SignaturePublicViewServiceImpl implements SignaturePublicViewServic
 
     @Override
     @Transactional(readOnly = true)
-    public List<SignatureResponse> listForContract(Long contractId) {
-        return signatureRepository.findAllByContractId(contractId).stream()
+    public List<SignatureResponse> listForContract(Long contractId, Long organizationId) {
+        return signatureRepository.findAllByContractIdAndOrganizationId(contractId, organizationId).stream()
                 .map(mapper::toResponse)
                 .toList();
     }
