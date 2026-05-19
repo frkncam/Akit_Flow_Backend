@@ -16,7 +16,7 @@ public interface SignatureRepository extends JpaRepository<Signature, Long> {
 
     List<Signature> findAllByContractIdAndStatus(Long contractId, SignatureStatus status);
 
-    List<Signature> findAllByContractId(Long contractId);
+    List<Signature> findAllByContractIdAndOrganizationId(Long contractId, Long organizationId);
 
     List<Signature> findAllByContractIdAndBatchId(Long contractId, UUID batchId);
 

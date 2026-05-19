@@ -2,6 +2,7 @@ package com.akitflow.contract.domain;
 
 import com.akitflow.contract.domain.enums.ContractStatus;
 import com.akitflow.contract.domain.enums.ContractType;
+import com.akitflow.contract.exception.InvalidContractStateTransitionException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -88,4 +89,14 @@ public class Contract {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    public void transitionTo(ContractStatus target) {
+        if (status == target) {
+            return;
+        }
+        if (!status.canTransitionTo(target)) {
+            throw new InvalidContractStateTransitionException(status, target);
+        }
+        status = target;
+    }
 }

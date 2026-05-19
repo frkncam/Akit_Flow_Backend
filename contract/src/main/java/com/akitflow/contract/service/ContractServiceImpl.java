@@ -1,11 +1,15 @@
 package com.akitflow.contract.service;
 
+import com.akitflow.contract.client.SignatureClient;
 import com.akitflow.contract.domain.Contract;
+import com.akitflow.contract.domain.ContractFile;
 import com.akitflow.contract.domain.Party;
 import com.akitflow.contract.domain.enums.ContractStatus;
 import com.akitflow.contract.dto.request.ContractCreateRequest;
 import com.akitflow.contract.dto.request.ContractUpdateRequest;
+import com.akitflow.contract.dto.request.SendForSignatureRequest;
 import com.akitflow.contract.dto.response.ContractResponse;
+import com.akitflow.contract.dto.response.SignatureSummaryResponse;
 import com.akitflow.contract.event.payload.ContractCreatedPayload;
 import com.akitflow.contract.event.payload.ContractStatusChangedPayload;
 import com.akitflow.contract.event.publisher.ContractEventPublisher;
@@ -34,6 +38,7 @@ public class ContractServiceImpl implements ContractService {
     private final PartyJsonService partyJsonService;
     private final ContractEventPublisher eventPublisher;
     private final MinioService minioService;
+    private final SignatureClient signatureClient;
 
     @Override
     @Transactional
@@ -103,11 +108,7 @@ public class ContractServiceImpl implements ContractService {
         if (oldStatus == newStatus) {
             return toResponse(contract);
         }
-        if (!oldStatus.canTransitionTo(newStatus)) {
-            throw new InvalidContractStateTransitionException(oldStatus, newStatus);
-        }
-
-        contract.setStatus(newStatus);
+        contract.transitionTo(newStatus);
         if (newStatus == ContractStatus.ACTIVE && contract.getSignedAt() == null) {
             contract.setSignedAt(Instant.now());
         }
@@ -136,6 +137,51 @@ public class ContractServiceImpl implements ContractService {
         contractFileRepository.findAllByContract_Id(id)
                 .forEach(f -> minioService.delete(f.getStorageKey()));
         contractRepository.delete(contract);
+    }
+
+    @Override
+    @Transactional
+    public List<SignatureSummaryResponse> sendForSignature(Long id, SendForSignatureRequest request, HeaderPrincipal user) {
+        Contract contract = findOwnedOrThrow(id, user);
+
+        if (contract.getStatus() != ContractStatus.DRAFT
+                && contract.getStatus() != ContractStatus.PENDING_SIGNATURE) {
+            throw new InvalidContractStateTransitionException(
+                    contract.getStatus(), ContractStatus.PENDING_SIGNATURE);
+        }
+
+        ContractFile file = contractFileRepository.findById(request.fileId())
+                .orElseThrow(() -> new ResourceNotFoundException("File not found: id=" + request.fileId()));
+        if (!file.getContract().getId().equals(id)) {
+            throw new ResourceNotFoundException("File does not belong to this contract: id=" + request.fileId());
+        }
+
+        var batchRequest = new SignatureClient.BatchSignatureRequest(
+                contract.getId(),
+                contract.getTitle(),
+                file.getId(),
+                file.getStorageKey(),
+                file.getFileName(),
+                request.signers().stream()
+                        .map(s -> new SignatureClient.SignerRequest(s.name(), s.email()))
+                        .toList()
+        );
+
+        List<SignatureClient.SignatureDto> created =
+                signatureClient.sendForSignature(batchRequest, user.userId(), user.organizationId(),
+                        user.email(), user.role());
+
+        contract.transitionTo(ContractStatus.PENDING_SIGNATURE);
+        contractRepository.save(contract);
+
+        return created.stream().map(SignatureSummaryResponse::from).toList();
+    }
+
+    @Override
+    public List<SignatureSummaryResponse> listSignatures(Long id, HeaderPrincipal user) {
+        return signatureClient.listForContract(id, user.userId(), user.organizationId(), user.role()).stream()
+                .map(SignatureSummaryResponse::from)
+                .toList();
     }
 
     private Contract findOwnedOrThrow(Long id, HeaderPrincipal user) {

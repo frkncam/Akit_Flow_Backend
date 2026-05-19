@@ -17,11 +17,14 @@ public interface SignatureClient {
     List<SignatureDto> sendForSignature(@RequestBody BatchSignatureRequest request,
                                         @RequestHeader("X-User-Id") Long userId,
                                         @RequestHeader("X-Org-Id") Long orgId,
-                                        @RequestHeader("X-User-Email") String email);
+                                        @RequestHeader("X-User-Email") String email,
+                                        @RequestHeader("X-User-Role") String role);
 
     @GetMapping("/api/v1/signatures/contracts/{contractId}")
     List<SignatureDto> listForContract(@PathVariable Long contractId,
-                                       @RequestHeader("X-Org-Id") Long orgId);
+                                       @RequestHeader("X-User-Id") Long userId,
+                                       @RequestHeader("X-Org-Id") Long orgId,
+                                       @RequestHeader("X-User-Role") String role);
 
     record BatchSignatureRequest(
             Long contractId,
@@ -29,7 +32,6 @@ public interface SignatureClient {
             Long fileId,
             String fileStorageKey,
             String fileName,
-            Long organizationId,
             List<SignerRequest> signers
     ) {}
 

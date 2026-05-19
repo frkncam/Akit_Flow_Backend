@@ -35,13 +35,13 @@ public class SignatureRequestServiceImpl implements SignatureRequestService {
     private final AppProperties appProperties;
 
     @Override
-    public List<SignatureResponse> sendForSignature(BatchSignatureRequest request) {
-        SignatureSetup setup = prepare(request);
+    public List<SignatureResponse> sendForSignature(BatchSignatureRequest request, Long organizationId) {
+        SignatureSetup setup = prepare(request, organizationId);
         ProviderSignatureResult providerRes = provider.requestSignatures(setup.toProviderRequest());
         return persist(setup, providerRes);
     }
 
-    private SignatureSetup prepare(BatchSignatureRequest request) {
+    private SignatureSetup prepare(BatchSignatureRequest request, Long organizationId) {
         byte[] pdf = minioService.download(request.fileStorageKey());
         Duration validity = Duration.ofDays(appProperties.signature().token().validityDays());
 
@@ -49,11 +49,12 @@ public class SignatureRequestServiceImpl implements SignatureRequestService {
                 .map(s -> new SignerInfo(s.name(), s.email()))
                 .toList();
 
-        return new SignatureSetup(request, pdf, signers, validity);
+        return new SignatureSetup(request, organizationId, pdf, signers, validity);
     }
 
     private record SignatureSetup(
             BatchSignatureRequest req,
+            Long organizationId,
             byte[] pdf,
             List<SignerInfo> signers,
             Duration validity
@@ -72,7 +73,7 @@ public class SignatureRequestServiceImpl implements SignatureRequestService {
     @Transactional
     List<SignatureResponse> persist(SignatureSetup setup, ProviderSignatureResult providerRes) {
         Long contractId = setup.req().contractId();
-        Long orgId = setup.req().organizationId();
+        Long orgId = setup.organizationId();
 
         signatureRepository.findAllByContractIdAndStatus(contractId, SignatureStatus.PENDING)
                 .forEach(s -> s.setStatus(SignatureStatus.CANCELLED));
