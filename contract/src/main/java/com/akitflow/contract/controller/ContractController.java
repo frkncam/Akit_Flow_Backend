@@ -9,7 +9,8 @@ import com.akitflow.contract.dto.response.ContractSignatureResponse;
 import com.akitflow.contract.dto.response.PageResponse;
 import com.akitflow.contract.security.HeaderPrincipal;
 import com.akitflow.contract.service.ContractService;
-import com.akitflow.contract.service.ContractSignatureService;
+import com.akitflow.contract.service.SignaturePublicViewService;
+import com.akitflow.contract.service.SignatureRequestService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +25,8 @@ import org.springframework.web.bind.annotation.*;
 public class ContractController {
 
     private final ContractService contractService;
-    private final ContractSignatureService signatureService;
+    private final SignatureRequestService signatureRequestService;
+    private final SignaturePublicViewService signatureViewService;
 
     @PostMapping
     public ResponseEntity<ContractResponse> create(@Valid @RequestBody ContractCreateRequest request,
@@ -70,13 +72,13 @@ public class ContractController {
             @PathVariable Long id,
             @Valid @RequestBody SendForSignatureRequest request,
             @AuthenticationPrincipal HeaderPrincipal user) {
-        return ResponseEntity.accepted().body(signatureService.sendForSignature(id, request, user));
+        return ResponseEntity.accepted().body(signatureRequestService.sendForSignature(id, request, user));
     }
 
     @GetMapping("/{id}/signatures")
     public java.util.List<ContractSignatureResponse> listSignatures(
             @PathVariable Long id,
             @AuthenticationPrincipal HeaderPrincipal user) {
-        return signatureService.listForContract(id, user);
+        return signatureViewService.listForContract(id, user);
     }
 }

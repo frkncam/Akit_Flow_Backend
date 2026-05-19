@@ -16,12 +16,28 @@ public record AppProperties(
     ) {}
 
     public record Signature(
-            Certificate certificate
+            Certificate certificate,
+            Appearance appearance,
+            Token token
     ) {
         public record Certificate(
                 int validityYears,
                 int keySize,
                 String algorithm
+        ) {}
+
+        public record Appearance(
+                int margin,
+                int boxWidth,
+                int boxHeight,
+                int fontSize,
+                String timezone,
+                String labelTr,
+                String labelEn
+        ) {}
+
+        public record Token(
+                int validityDays
         ) {}
     }
 }

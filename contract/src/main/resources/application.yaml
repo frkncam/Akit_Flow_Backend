@@ -53,6 +53,16 @@ app:
       validity-years: 5
       key-size: 2048
       algorithm: SHA256withRSA
+    appearance:
+      margin: 50
+      box-width: 240
+      box-height: 70
+      font-size: 8
+      timezone: Europe/Istanbul
+      label-tr: "DIGITAL OLARAK IMZALANMISTIR"
+      label-en: "DIGITALLY SIGNED"
+    token:
+      validity-days: 7
 
 logging:
   level:

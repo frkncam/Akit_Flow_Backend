@@ -34,6 +34,20 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(410, "Gone", ex.getMessage()));
     }
 
+    @ExceptionHandler(PdfSigningFailedException.class)
+    public ResponseEntity<ErrorResponse> handlePdfSigningFailed(PdfSigningFailedException ex) {
+        log.error("PDF imzalama başarısız", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponse.of(500, "PDF Signing Failed", ex.getMessage()));
+    }
+
+    @ExceptionHandler(CertificateLoadingException.class)
+    public ResponseEntity<ErrorResponse> handleCertificateLoading(CertificateLoadingException ex) {
+        log.error("Sertifika yüklenemedi", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponse.of(500, "Certificate Error", ex.getMessage()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()
