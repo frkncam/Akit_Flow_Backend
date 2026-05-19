@@ -2,19 +2,18 @@ package com.akitflow.contract.service;
 
 import com.akitflow.contract.config.AppProperties;
 import com.akitflow.contract.domain.OrganizationCertificate;
+import com.akitflow.contract.exception.CertificateLoadingException;
 import com.akitflow.contract.repository.OrganizationCertificateRepository;
+import com.akitflow.contract.service.util.PemUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
-import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -24,7 +23,6 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Base64;
 import java.util.Date;
 
 @Service
@@ -66,8 +64,8 @@ public class CertificateService {
                     new java.io.ByteArrayInputStream(holder.getEncoded())
             );
 
-            String certPem = toPem("CERTIFICATE", cert.getEncoded());
-            String keyPem = toPem("PRIVATE KEY", keyPair.getPrivate().getEncoded());
+            String certPem = PemUtils.writeCertificate(cert);
+            String keyPem = PemUtils.writePrivateKey(keyPair.getPrivate());
 
             OrganizationCertificate entity = OrganizationCertificate.builder()
                     .organizationId(organizationId)
@@ -81,42 +79,16 @@ public class CertificateService {
 
             log.info("Self-signed certificate created for org {}", organizationId);
             return new CertKeyPair(cert, keyPair.getPrivate());
+        } catch (CertificateLoadingException e) {
+            throw e;
         } catch (Exception e) {
-            throw new IllegalStateException("Sertifika oluşturulamadı: " + e.getMessage(), e);
+            throw new CertificateLoadingException("Sertifika oluşturulamadı: " + e.getMessage(), e);
         }
     }
 
     private CertKeyPair fromEntity(OrganizationCertificate entity) {
-        try {
-            byte[] certBytes = Base64.getMimeDecoder().decode(
-                    entity.getCertificatePem()
-                            .replace("-----BEGIN CERTIFICATE-----", "")
-                            .replace("-----END CERTIFICATE-----", "")
-            );
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            X509Certificate cert = (X509Certificate) cf.generateCertificate(
-                    new java.io.ByteArrayInputStream(certBytes)
-            );
-
-            byte[] keyBytes = Base64.getMimeDecoder().decode(
-                    entity.getPrivateKeyPem()
-                            .replace("-----BEGIN PRIVATE KEY-----", "")
-                            .replace("-----END PRIVATE KEY-----", "")
-            );
-            java.security.spec.PKCS8EncodedKeySpec spec = new java.security.spec.PKCS8EncodedKeySpec(keyBytes);
-            PrivateKey key = java.security.KeyFactory.getInstance("RSA").generatePrivate(spec);
-
-            return new CertKeyPair(cert, key);
-        } catch (Exception e) {
-            throw new IllegalStateException("Sertifika yüklenemedi: " + e.getMessage(), e);
-        }
-    }
-
-    private String toPem(String type, byte[] der) {
-        StringWriter w = new StringWriter();
-        w.write("-----BEGIN " + type + "-----\n");
-        w.write(Base64.getMimeEncoder().encodeToString(der));
-        w.write("\n-----END " + type + "-----\n");
-        return w.toString();
+        X509Certificate cert = PemUtils.parseCertificate(entity.getCertificatePem());
+        PrivateKey key = PemUtils.parsePrivateKey(entity.getPrivateKeyPem());
+        return new CertKeyPair(cert, key);
     }
 }

@@ -1,5 +1,7 @@
 package com.akitflow.contract.service;
 
+import com.akitflow.contract.config.AppProperties;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -20,7 +22,6 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
@@ -30,11 +31,11 @@ import java.util.Calendar;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class PdfSigningService {
 
-    private static final DateTimeFormatter DATE_FMT =
-            DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").withZone(ZoneId.of("Europe/Istanbul"));
+    private final AppProperties props;
 
     public byte[] sign(byte[] pdfContent, X509Certificate cert, PrivateKey key,
                        String signerName, String reason) throws Exception {
@@ -60,14 +61,22 @@ public class PdfSigningService {
     }
 
     private void addSignatureAppearance(PDDocument doc, String signerName, String reason) throws Exception {
+        AppProperties.Signature.Appearance a = props.signature().appearance();
+
         PDPage page = doc.getPage(0);
         PDRectangle mediaBox = page.getMediaBox();
-        float margin = 50;
-        float boxW = 240;
-        float boxH = 70;
+
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
+                .withZone(ZoneId.of(a.timezone()));
+
+        float margin = a.margin();
+        float boxW = a.boxWidth();
+        float boxH = a.boxHeight();
         float x = mediaBox.getWidth() - boxW - margin;
         float y = margin;
-        String now = DATE_FMT.format(Instant.now());
+        String now = dateFmt.format(Instant.now());
+        String tsLabel = "(TSI)".equals(a.timezone()) || "Europe/Istanbul".equals(a.timezone())
+                ? " (TSI)" : "";
 
         try (PDPageContentStream cs = new PDPageContentStream(
                 doc, page, PDPageContentStream.AppendMode.APPEND, true)) {
@@ -79,36 +88,38 @@ public class PdfSigningService {
 
             PDType1Font f = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
             PDType1Font fb = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+            int fs = a.fontSize();
 
             cs.beginText();
-            cs.setFont(fb, 8);
+            cs.setFont(fb, fs);
             cs.setNonStrokingColor(0.2f, 0.2f, 0.2f);
             cs.newLineAtOffset(x + 8, y + boxH - 14);
-            cs.showText("DIGITAL OLARAK IMZALANMISTIR");
+            cs.showText(a.labelTr());
             cs.endText();
 
             cs.beginText();
-            cs.setFont(f, 8);
+            cs.setFont(f, fs);
             cs.setNonStrokingColor(0.2f, 0.2f, 0.2f);
             cs.newLineAtOffset(x + 8, y + boxH - 28);
             cs.showText("Imzaci: " + truncate(signerName, 40));
             cs.endText();
 
             cs.beginText();
-            cs.setFont(f, 8);
+            cs.setFont(f, fs);
             cs.newLineAtOffset(x + 8, y + boxH - 40);
             cs.showText("Sozlesme: " + truncate(reason, 40));
             cs.endText();
 
+            int smallFs = Math.max(fs - 1, 5);
             cs.beginText();
-            cs.setFont(f, 7);
+            cs.setFont(f, smallFs);
             cs.setNonStrokingColor(0.4f, 0.4f, 0.4f);
             cs.newLineAtOffset(x + 8, y + boxH - 52);
-            cs.showText("Tarih: " + now + " (TSI)");
+            cs.showText("Tarih: " + now + tsLabel);
             cs.endText();
 
             cs.beginText();
-            cs.setFont(f, 6);
+            cs.setFont(f, Math.max(fs - 2, 4));
             cs.setNonStrokingColor(0.5f, 0.5f, 0.5f);
             cs.newLineAtOffset(x + 8, y + 8);
             cs.showText("AkitFlow e-Imza — 5070 sayili kanun kapsaminda degildir");
@@ -132,7 +143,7 @@ public class PdfSigningService {
         CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
 
         JcaContentSignerBuilder signerBuilder =
-                new JcaContentSignerBuilder("SHA256withRSA");
+                new JcaContentSignerBuilder(props.signature().certificate().algorithm());
         gen.addSignerInfoGenerator(
                 new org.bouncycastle.cms.SignerInfoGeneratorBuilder(
                         new org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder()
