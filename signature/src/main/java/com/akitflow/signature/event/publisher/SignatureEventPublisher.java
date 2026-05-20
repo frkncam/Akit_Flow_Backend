@@ -1,10 +1,10 @@
 package com.akitflow.signature.event.publisher;
 
+import com.akitflow.common.event.DomainEvent;
+import com.akitflow.common.event.payload.SignatureBatchCompletedPayload;
+import com.akitflow.common.event.payload.SignatureBatchRejectedPayload;
+import com.akitflow.common.event.payload.SignatureRequestedPayload;
 import com.akitflow.signature.config.RabbitMQConfig;
-import com.akitflow.signature.event.SignatureEvent;
-import com.akitflow.signature.event.payload.SignatureBatchCompletedPayload;
-import com.akitflow.signature.event.payload.SignatureBatchRejectedPayload;
-import com.akitflow.signature.event.payload.SignatureRequestedPayload;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -30,8 +30,8 @@ public class SignatureEventPublisher {
     }
 
     private <T> void publish(String routingKey, Long organizationId, Long actorId, T payload) {
+        DomainEvent<T> event = DomainEvent.of(routingKey, organizationId, actorId, payload);
         try {
-            SignatureEvent<T> event = SignatureEvent.of(routingKey, organizationId, actorId, payload);
             rabbitTemplate.convertAndSend(RabbitMQConfig.SIGNATURE_EXCHANGE, routingKey, event);
             log.debug("Event yayınlandı: {} eventId={}", routingKey, event.eventId());
         } catch (Exception e) {

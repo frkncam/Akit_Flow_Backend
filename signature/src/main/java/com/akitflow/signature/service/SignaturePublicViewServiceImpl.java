@@ -1,8 +1,8 @@
 package com.akitflow.signature.service;
 
-import com.akitflow.signature.dto.response.SignatureResponse;
+import com.akitflow.common.client.dto.SignatureDto;
+import com.akitflow.common.exception.ResourceNotFoundException;
 import com.akitflow.signature.dto.response.SignatureViewResponse;
-import com.akitflow.signature.exception.ResourceNotFoundException;
 import com.akitflow.signature.exception.SignatureExpiredException;
 import com.akitflow.signature.mapper.SignatureMapper;
 import com.akitflow.signature.repository.SignatureRepository;
@@ -47,9 +47,9 @@ public class SignaturePublicViewServiceImpl implements SignaturePublicViewServic
 
     @Override
     @Transactional(readOnly = true)
-    public List<SignatureResponse> listForContract(Long contractId, Long organizationId) {
+    public List<SignatureDto> listForContract(Long contractId, Long organizationId) {
         return signatureRepository.findAllByContractIdAndOrganizationId(contractId, organizationId).stream()
-                .map(mapper::toResponse)
+                .map(mapper::toDto)
                 .toList();
     }
 }

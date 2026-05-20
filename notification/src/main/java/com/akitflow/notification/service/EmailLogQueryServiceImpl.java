@@ -3,7 +3,7 @@ package com.akitflow.notification.service;
 import com.akitflow.notification.domain.EmailLog;
 import com.akitflow.notification.domain.enums.EmailStatus;
 import com.akitflow.notification.dto.response.EmailLogResponse;
-import com.akitflow.notification.exception.ResourceNotFoundException;
+import com.akitflow.common.exception.ResourceNotFoundException;
 import com.akitflow.notification.mapper.EmailLogMapper;
 import com.akitflow.notification.repository.EmailLogRepository;
 import lombok.RequiredArgsConstructor;

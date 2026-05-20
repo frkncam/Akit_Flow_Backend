@@ -1,9 +1,9 @@
 package com.akitflow.notification.consumer;
 
+import com.akitflow.common.event.DomainEvent;
+import com.akitflow.common.event.payload.ContractCreatedPayload;
 import com.akitflow.notification.config.RabbitMQConfig;
 import com.akitflow.notification.domain.enums.EmailType;
-import com.akitflow.notification.event.ContractEventEnvelope;
-import com.akitflow.notification.event.payload.ContractCreatedPayload;
 import com.akitflow.notification.service.EmailService;
 import com.akitflow.notification.service.IdempotencyService;
 import com.akitflow.notification.service.TemplateService;
@@ -24,7 +24,7 @@ public class ContractCreatedListener {
     private final EmailService emails;
 
     @RabbitListener(queues = RabbitMQConfig.Q_CONTRACT_CREATED)
-    public void onMessage(ContractEventEnvelope<ContractCreatedPayload> event) {
+    public void onMessage(DomainEvent<ContractCreatedPayload> event) {
         log.info("contract.created alındı: eventId={}", event.eventId());
 
         if (!idempotency.markIfNew(event.eventId(), event.eventType())) {

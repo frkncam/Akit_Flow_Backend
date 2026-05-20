@@ -1,11 +1,11 @@
 package com.akitflow.signature.service;
 
+import com.akitflow.common.client.dto.BatchSignatureRequest;
+import com.akitflow.common.client.dto.SignatureDto;
+import com.akitflow.common.event.payload.SignatureRequestedPayload;
 import com.akitflow.signature.config.AppProperties;
 import com.akitflow.signature.domain.Signature;
 import com.akitflow.signature.domain.enums.SignatureStatus;
-import com.akitflow.signature.dto.request.BatchSignatureRequest;
-import com.akitflow.signature.dto.response.SignatureResponse;
-import com.akitflow.signature.event.payload.SignatureRequestedPayload;
 import com.akitflow.signature.event.publisher.SignatureEventPublisher;
 import com.akitflow.signature.mapper.SignatureMapper;
 import com.akitflow.signature.provider.ESignatureProvider;
@@ -35,7 +35,7 @@ public class SignatureRequestServiceImpl implements SignatureRequestService {
     private final AppProperties appProperties;
 
     @Override
-    public List<SignatureResponse> sendForSignature(BatchSignatureRequest request, Long organizationId) {
+    public List<SignatureDto> sendForSignature(BatchSignatureRequest request, Long organizationId) {
         SignatureSetup setup = prepare(request, organizationId);
         ProviderSignatureResult providerRes = provider.requestSignatures(setup.toProviderRequest());
         return persist(setup, providerRes);
@@ -71,7 +71,7 @@ public class SignatureRequestServiceImpl implements SignatureRequestService {
     }
 
     @Transactional
-    List<SignatureResponse> persist(SignatureSetup setup, ProviderSignatureResult providerRes) {
+    List<SignatureDto> persist(SignatureSetup setup, ProviderSignatureResult providerRes) {
         Long contractId = setup.req().contractId();
         Long orgId = setup.organizationId();
 
@@ -115,6 +115,6 @@ public class SignatureRequestServiceImpl implements SignatureRequestService {
         }
 
         log.info("Send-for-signature: contractId={}, signerCount={}", contractId, created.size());
-        return created.stream().map(mapper::toResponse).toList();
+        return created.stream().map(mapper::toDto).toList();
     }
 }

@@ -6,8 +6,8 @@ import com.akitflow.template.dto.request.TemplatePreviewRequest;
 import com.akitflow.template.dto.request.TemplateUpdateRequest;
 import com.akitflow.template.dto.response.SystemVariableResponse;
 import com.akitflow.template.dto.response.TemplatePreviewResponse;
-import com.akitflow.template.dto.response.TemplateResponse;
-import com.akitflow.template.security.HeaderPrincipal;
+import com.akitflow.common.client.dto.TemplateDto;
+import com.akitflow.common.security.HeaderPrincipal;
 import com.akitflow.template.service.TemplateService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,13 +26,13 @@ public class TemplateController {
     private final TemplateService service;
 
     @PostMapping
-    public ResponseEntity<TemplateResponse> create(@Valid @RequestBody TemplateCreateRequest request,
+    public ResponseEntity<TemplateDto> create(@Valid @RequestBody TemplateCreateRequest request,
                                                    @AuthenticationPrincipal HeaderPrincipal user) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.create(request, user));
     }
 
     @GetMapping
-    public List<TemplateResponse> list(@RequestParam(value = "category", required = false) TemplateCategory category,
+    public List<TemplateDto> list(@RequestParam(value = "category", required = false) TemplateCategory category,
                                        @AuthenticationPrincipal HeaderPrincipal user) {
         return service.list(user, category);
     }
@@ -43,13 +43,13 @@ public class TemplateController {
     }
 
     @GetMapping("/{id}")
-    public TemplateResponse get(@PathVariable Long id,
+    public TemplateDto get(@PathVariable Long id,
                                 @AuthenticationPrincipal HeaderPrincipal user) {
         return service.get(id, user);
     }
 
     @PatchMapping("/{id}")
-    public TemplateResponse update(@PathVariable Long id,
+    public TemplateDto update(@PathVariable Long id,
                                    @Valid @RequestBody TemplateUpdateRequest request,
                                    @AuthenticationPrincipal HeaderPrincipal user) {
         return service.update(id, request, user);

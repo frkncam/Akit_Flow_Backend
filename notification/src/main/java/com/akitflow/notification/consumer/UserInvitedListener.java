@@ -1,9 +1,9 @@
 package com.akitflow.notification.consumer;
 
+import com.akitflow.common.event.DomainEvent;
+import com.akitflow.common.event.payload.UserInvitedPayload;
 import com.akitflow.notification.config.RabbitMQConfig;
 import com.akitflow.notification.domain.enums.EmailType;
-import com.akitflow.notification.event.AuthEventEnvelope;
-import com.akitflow.notification.event.payload.UserInvitedPayload;
 import com.akitflow.notification.service.EmailService;
 import com.akitflow.notification.service.IdempotencyService;
 import com.akitflow.notification.service.TemplateService;
@@ -24,7 +24,7 @@ public class UserInvitedListener {
     private final EmailService emails;
 
     @RabbitListener(queues = RabbitMQConfig.Q_USER_INVITED)
-    public void onMessage(AuthEventEnvelope<UserInvitedPayload> event) {
+    public void onMessage(DomainEvent<UserInvitedPayload> event) {
         log.info("user.invited alındı: eventId={}", event.eventId());
 
         if (!idempotency.markIfNew(event.eventId(), event.eventType())) {

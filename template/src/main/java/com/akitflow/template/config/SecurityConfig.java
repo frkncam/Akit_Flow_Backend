@@ -1,6 +1,6 @@
 package com.akitflow.template.config;
 
-import com.akitflow.template.security.TrustedHeaderAuthFilter;
+import com.akitflow.common.security.TrustedHeaderAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;

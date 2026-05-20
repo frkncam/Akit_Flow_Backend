@@ -1,8 +1,8 @@
 package com.akitflow.notification.consumer;
 
+import com.akitflow.common.event.DomainEvent;
 import com.akitflow.notification.config.RabbitMQConfig;
 import com.akitflow.notification.domain.enums.EmailType;
-import com.akitflow.notification.event.ContractEventEnvelope;
 import com.akitflow.notification.event.payload.ContractSignatureRejectedPayload;
 import com.akitflow.notification.service.EmailService;
 import com.akitflow.notification.service.IdempotencyService;
@@ -25,7 +25,7 @@ public class ContractSignatureRejectedListener {
     private final EmailService emails;
 
     @RabbitListener(queues = RabbitMQConfig.Q_CONTRACT_SIGNATURE_REJECTED)
-    public void onMessage(ContractEventEnvelope<ContractSignatureRejectedPayload> event) {
+    public void onMessage(DomainEvent<ContractSignatureRejectedPayload> event) {
         log.info("contract.signature.rejected alındı: eventId={}", event.eventId());
 
         if (!idempotency.markIfNew(event.eventId(), event.eventType())) {

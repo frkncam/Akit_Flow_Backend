@@ -1,10 +1,10 @@
 package com.akitflow.notification.consumer;
 
+import com.akitflow.common.event.DomainEvent;
+import com.akitflow.common.event.payload.SignatureRequestedPayload;
 import com.akitflow.notification.config.AppProperties;
 import com.akitflow.notification.config.RabbitMQConfig;
 import com.akitflow.notification.domain.enums.EmailType;
-import com.akitflow.notification.event.SignatureEventEnvelope;
-import com.akitflow.notification.event.payload.SignatureRequestedPayload;
 import com.akitflow.notification.service.EmailService;
 import com.akitflow.notification.service.IdempotencyService;
 import com.akitflow.notification.service.TemplateService;
@@ -26,7 +26,7 @@ public class SignatureRequestedListener {
     private final AppProperties props;
 
     @RabbitListener(queues = RabbitMQConfig.Q_SIGNATURE_REQUESTED)
-    public void onMessage(SignatureEventEnvelope<SignatureRequestedPayload> event) {
+    public void onMessage(DomainEvent<SignatureRequestedPayload> event) {
         log.info("signature.requested received: eventId={}", event.eventId());
 
         if (!idempotency.markIfNew(event.eventId(), event.eventType())) {

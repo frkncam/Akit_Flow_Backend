@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableConfigurationProperties(AppProperties.class)
-@EnableFeignClients
+@EnableFeignClients(basePackages = "com.akitflow.common.client")
 @EnableScheduling
 public class ContractApplication {
 

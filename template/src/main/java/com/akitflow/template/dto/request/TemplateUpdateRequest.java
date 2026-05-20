@@ -1,7 +1,7 @@
 package com.akitflow.template.dto.request;
 
 import com.akitflow.template.domain.TemplateCategory;
-import com.akitflow.template.dto.common.TemplateVariableDto;
+import com.akitflow.common.client.dto.TemplateVariableDto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 

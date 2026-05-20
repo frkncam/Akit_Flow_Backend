@@ -1,19 +1,18 @@
 package com.akitflow.contract.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.akitflow.common.messaging.CommonRabbitConfig;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.ExchangeBuilder;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.core.TopicExchange;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 @Configuration
+@Import(CommonRabbitConfig.class)
 public class RabbitMQConfig {
 
     public static final String CONTRACT_EXCHANGE = "contract.exchange";
@@ -54,18 +53,5 @@ public class RabbitMQConfig {
     @Bean
     public Binding bindSignatureBatchRejected(Queue signatureBatchRejectedQueue, TopicExchange signatureExchange) {
         return BindingBuilder.bind(signatureBatchRejectedQueue).to(signatureExchange).with("signature.batch.rejected");
-    }
-
-    @Bean
-    public Jackson2JsonMessageConverter messageConverter(ObjectMapper objectMapper) {
-        return new Jackson2JsonMessageConverter(objectMapper);
-    }
-
-    @Bean
-    public RabbitTemplate rabbitTemplate(ConnectionFactory cf,
-                                         Jackson2JsonMessageConverter converter) {
-        RabbitTemplate t = new RabbitTemplate(cf);
-        t.setMessageConverter(converter);
-        return t;
     }
 }

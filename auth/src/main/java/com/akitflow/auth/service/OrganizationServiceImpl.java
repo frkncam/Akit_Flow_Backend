@@ -4,7 +4,7 @@ import com.akitflow.auth.dto.request.UpdateMemberRoleRequest;
 import com.akitflow.auth.dto.request.UpdateOrganizationRequest;
 import com.akitflow.auth.dto.response.OrganizationResponse;
 import com.akitflow.auth.dto.response.UserResponse;
-import com.akitflow.auth.exception.ResourceNotFoundException;
+import com.akitflow.common.exception.ResourceNotFoundException;
 import com.akitflow.auth.mapper.OrganizationMapper;
 import com.akitflow.auth.mapper.UserMapper;
 import com.akitflow.auth.repository.OrganizationRepository;

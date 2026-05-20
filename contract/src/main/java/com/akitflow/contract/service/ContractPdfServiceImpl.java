@@ -1,17 +1,17 @@
 package com.akitflow.contract.service;
 
-import com.akitflow.contract.client.TemplateClient;
-import com.akitflow.contract.client.TemplateClient.TemplateDto;
-import com.akitflow.contract.client.TemplateClient.VariableDto;
+import com.akitflow.common.client.TemplateClient;
+import com.akitflow.common.client.dto.TemplateDto;
+import com.akitflow.common.client.dto.TemplateVariableDto;
 import com.akitflow.contract.domain.Contract;
 import com.akitflow.contract.domain.ContractFile;
 import com.akitflow.contract.dto.request.GeneratePdfRequest;
 import com.akitflow.contract.dto.response.ContractFileResponse;
-import com.akitflow.contract.exception.ResourceNotFoundException;
+import com.akitflow.common.exception.ResourceNotFoundException;
 import com.akitflow.contract.mapper.ContractFileMapper;
 import com.akitflow.contract.repository.ContractFileRepository;
 import com.akitflow.contract.repository.ContractRepository;
-import com.akitflow.contract.security.HeaderPrincipal;
+import com.akitflow.common.security.HeaderPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,7 +58,7 @@ public class ContractPdfServiceImpl implements ContractPdfService {
         Map<String, Object> contractView = buildContractView(contract);
         Map<String, String> systemBindings = flattenForBinding(contractView);
 
-        List<VariableDto> variables = template.variables() != null
+        List<TemplateVariableDto> variables = template.variables() != null
                 ? template.variables()
                 : Collections.emptyList();
         Map<String, String> customValues = body != null && body.customValues() != null
@@ -95,11 +95,11 @@ public class ContractPdfServiceImpl implements ContractPdfService {
         return withDownloadUrl(saved);
     }
 
-    private Map<String, String> resolveValues(List<VariableDto> variables,
+    private Map<String, String> resolveValues(List<TemplateVariableDto> variables,
                                               Map<String, String> systemBindings,
                                               Map<String, String> customValues) {
         Map<String, String> resolved = new HashMap<>();
-        for (VariableDto v : variables) {
+        for (TemplateVariableDto v : variables) {
             String value = null;
             if (customValues.containsKey(v.key())) {
                 value = customValues.get(v.key());

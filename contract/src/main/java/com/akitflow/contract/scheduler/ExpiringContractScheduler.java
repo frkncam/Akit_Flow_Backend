@@ -1,7 +1,7 @@
 package com.akitflow.contract.scheduler;
 
 import com.akitflow.contract.domain.Contract;
-import com.akitflow.contract.event.payload.ContractExpiringSoonPayload;
+import com.akitflow.common.event.payload.ContractExpiringSoonPayload;
 import com.akitflow.contract.event.publisher.ContractEventPublisher;
 import com.akitflow.contract.repository.ContractRepository;
 import lombok.RequiredArgsConstructor;

@@ -1,7 +1,7 @@
 package com.akitflow.contract.service;
 
 import com.akitflow.contract.dto.response.ContractFileResponse;
-import com.akitflow.contract.security.HeaderPrincipal;
+import com.akitflow.common.security.HeaderPrincipal;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;

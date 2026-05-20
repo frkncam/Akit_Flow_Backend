@@ -1,6 +1,13 @@
 package com.akitflow.contract.service;
 
-import com.akitflow.contract.client.SignatureClient;
+import com.akitflow.common.client.SignatureClient;
+import com.akitflow.common.client.dto.BatchSignatureRequest;
+import com.akitflow.common.client.dto.SignatureDto;
+import com.akitflow.common.client.dto.SignerRequest;
+import com.akitflow.common.event.payload.ContractCreatedPayload;
+import com.akitflow.common.event.payload.ContractStatusChangedPayload;
+import com.akitflow.common.exception.ResourceNotFoundException;
+import com.akitflow.common.security.HeaderPrincipal;
 import com.akitflow.contract.domain.Contract;
 import com.akitflow.contract.domain.ContractFile;
 import com.akitflow.contract.domain.Party;
@@ -10,15 +17,11 @@ import com.akitflow.contract.dto.request.ContractUpdateRequest;
 import com.akitflow.contract.dto.request.SendForSignatureRequest;
 import com.akitflow.contract.dto.response.ContractResponse;
 import com.akitflow.contract.dto.response.SignatureSummaryResponse;
-import com.akitflow.contract.event.payload.ContractCreatedPayload;
-import com.akitflow.contract.event.payload.ContractStatusChangedPayload;
 import com.akitflow.contract.event.publisher.ContractEventPublisher;
 import com.akitflow.contract.exception.InvalidContractStateTransitionException;
-import com.akitflow.contract.exception.ResourceNotFoundException;
 import com.akitflow.contract.mapper.ContractMapper;
 import com.akitflow.contract.repository.ContractFileRepository;
 import com.akitflow.contract.repository.ContractRepository;
-import com.akitflow.contract.security.HeaderPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -64,7 +67,7 @@ public class ContractServiceImpl implements ContractService {
         eventPublisher.publishContractCreated(orgId, userId, new ContractCreatedPayload(
                 contract.getId(),
                 contract.getTitle(),
-                contract.getContractType(),
+                contract.getContractType().name(),
                 partyDomainList.stream().map(Party::email).filter(e -> e != null && !e.isBlank()).toList(),
                 user.email()
         ));
@@ -122,8 +125,8 @@ public class ContractServiceImpl implements ContractService {
                 new ContractStatusChangedPayload(
                         contract.getId(),
                         contract.getTitle(),
-                        oldStatus,
-                        newStatus,
+                        oldStatus.name(),
+                        newStatus.name(),
                         user.email()
                 ));
 
@@ -156,18 +159,18 @@ public class ContractServiceImpl implements ContractService {
             throw new ResourceNotFoundException("File does not belong to this contract: id=" + request.fileId());
         }
 
-        var batchRequest = new SignatureClient.BatchSignatureRequest(
+        var batchRequest = new BatchSignatureRequest(
                 contract.getId(),
                 contract.getTitle(),
                 file.getId(),
                 file.getStorageKey(),
                 file.getFileName(),
                 request.signers().stream()
-                        .map(s -> new SignatureClient.SignerRequest(s.name(), s.email()))
+                        .map(s -> new SignerRequest(s.name(), s.email()))
                         .toList()
         );
 
-        List<SignatureClient.SignatureDto> created =
+        List<SignatureDto> created =
                 signatureClient.sendForSignature(batchRequest, user.userId(), user.organizationId(),
                         user.email(), user.role());
 

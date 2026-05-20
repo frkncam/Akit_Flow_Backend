@@ -3,10 +3,10 @@ package com.akitflow.contract.event.listener;
 import com.akitflow.contract.config.RabbitMQConfig;
 import com.akitflow.contract.domain.ProcessedEvent;
 import com.akitflow.contract.domain.enums.ContractStatus;
-import com.akitflow.contract.event.SignatureEvent;
-import com.akitflow.contract.event.payload.SignatureBatchCompletedPayload;
 import com.akitflow.contract.repository.ContractRepository;
 import com.akitflow.contract.repository.ProcessedEventRepository;
+import com.akitflow.common.event.DomainEvent;
+import com.akitflow.common.event.payload.SignatureBatchCompletedPayload;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -25,7 +25,7 @@ public class SignatureBatchCompletedListener {
 
     @RabbitListener(queues = RabbitMQConfig.Q_SIGNATURE_BATCH_COMPLETED)
     @Transactional
-    public void onMessage(SignatureEvent<SignatureBatchCompletedPayload> event) {
+    public void onMessage(DomainEvent<SignatureBatchCompletedPayload> event) {
         log.info("signature.batch.completed received: eventId={}", event.eventId());
 
         if (processedEventRepository.existsById(event.eventId())) {
