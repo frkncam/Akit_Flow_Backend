@@ -1,9 +1,9 @@
 package com.akitflow.notification.consumer;
 
+import com.akitflow.common.event.DomainEvent;
+import com.akitflow.common.event.payload.SignatureBatchCompletedPayload;
 import com.akitflow.notification.config.RabbitMQConfig;
 import com.akitflow.notification.domain.enums.EmailType;
-import com.akitflow.notification.event.SignatureEventEnvelope;
-import com.akitflow.notification.event.payload.SignatureBatchCompletedPayload;
 import com.akitflow.notification.service.EmailService;
 import com.akitflow.notification.service.IdempotencyService;
 import com.akitflow.notification.service.TemplateService;
@@ -26,7 +26,7 @@ public class SignatureBatchCompletedListener {
     private final EmailService emails;
 
     @RabbitListener(queues = RabbitMQConfig.Q_SIGNATURE_BATCH_COMPLETED)
-    public void onMessage(SignatureEventEnvelope<SignatureBatchCompletedPayload> event) {
+    public void onMessage(DomainEvent<SignatureBatchCompletedPayload> event) {
         log.info("signature.batch.completed received: eventId={}", event.eventId());
 
         if (!idempotency.markIfNew(event.eventId(), event.eventType())) {

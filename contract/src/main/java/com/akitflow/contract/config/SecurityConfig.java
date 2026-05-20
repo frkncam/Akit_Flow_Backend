@@ -1,6 +1,6 @@
 package com.akitflow.contract.config;
 
-import com.akitflow.contract.security.TrustedHeaderAuthFilter;
+import com.akitflow.common.security.TrustedHeaderAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -11,14 +11,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-/**
- * contract-service no longer validates JWTs. The api-gateway validates and
- * injects user info via trusted headers (X-User-Id, X-Org-Id, etc.) — see
- * TrustedHeaderAuthFilter.
- *
- * @PreAuthorize is preserved (@EnableMethodSecurity); the filter sets
- * authority "ROLE_<role>" so hasRole('OWNER') still works.
- */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity

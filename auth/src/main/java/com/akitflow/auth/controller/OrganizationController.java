@@ -4,7 +4,7 @@ import com.akitflow.auth.dto.request.UpdateMemberRoleRequest;
 import com.akitflow.auth.dto.request.UpdateOrganizationRequest;
 import com.akitflow.auth.dto.response.OrganizationResponse;
 import com.akitflow.auth.dto.response.UserResponse;
-import com.akitflow.auth.security.HeaderPrincipal;
+import com.akitflow.common.security.HeaderPrincipal;
 import com.akitflow.auth.service.OrganizationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

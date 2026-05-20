@@ -22,7 +22,7 @@ import java.security.SecureRandom;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.time.ZoneOffset;
 import java.util.Date;
 
 @Service
@@ -52,7 +52,7 @@ public class CertificateServiceImpl implements CertificateService {
             BigInteger serial = new BigInteger(64, new SecureRandom());
             Instant now = Instant.now();
             Date notBefore = Date.from(now);
-            Date notAfter = Date.from(now.plus(cfg.validityYears(), ChronoUnit.YEARS));
+            Date notAfter = Date.from(now.atZone(ZoneOffset.UTC).plusYears(cfg.validityYears()).toInstant());
 
             X509CertificateHolder holder = new JcaX509v3CertificateBuilder(
                     subject, serial, notBefore, notAfter, subject, keyPair.getPublic()

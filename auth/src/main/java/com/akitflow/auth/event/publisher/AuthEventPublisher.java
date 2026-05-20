@@ -4,10 +4,10 @@ import com.akitflow.auth.config.AppProperties;
 import com.akitflow.auth.config.RabbitMQConfig;
 import com.akitflow.auth.domain.InviteToken;
 import com.akitflow.auth.domain.User;
-import com.akitflow.auth.event.AuthEvent;
-import com.akitflow.auth.event.payload.UserInvitedPayload;
-import com.akitflow.auth.event.payload.UserJoinedPayload;
-import com.akitflow.auth.event.payload.UserRegisteredPayload;
+import com.akitflow.common.event.DomainEvent;
+import com.akitflow.common.event.payload.UserInvitedPayload;
+import com.akitflow.common.event.payload.UserJoinedPayload;
+import com.akitflow.common.event.payload.UserRegisteredPayload;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -32,12 +32,7 @@ public class AuthEventPublisher {
                 user.getLastName(),
                 user.getOrganization().getName()
         );
-        publish(USER_REGISTERED, AuthEvent.of(
-                USER_REGISTERED,
-                user.getOrganization().getId(),
-                user.getId(),
-                payload
-        ));
+        publish(USER_REGISTERED, user.getOrganization().getId(), user.getId(), payload);
     }
 
     public void publishUserInvited(InviteToken invite, User inviter, String rawToken) {
@@ -46,17 +41,12 @@ public class AuthEventPublisher {
 
         var payload = new UserInvitedPayload(
                 invite.getEmail(),
-                invite.getRole(),
+                invite.getRole().name(),
                 inviteLink,
                 invite.getOrganization().getName(),
                 invitedByName
         );
-        publish(USER_INVITED, AuthEvent.of(
-                USER_INVITED,
-                invite.getOrganization().getId(),
-                inviter.getId(),
-                payload
-        ));
+        publish(USER_INVITED, invite.getOrganization().getId(), inviter.getId(), payload);
     }
 
     public void publishUserJoined(User user) {
@@ -65,21 +55,16 @@ public class AuthEventPublisher {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getOrganization().getName(),
-                user.getRole()
+                user.getRole().name()
         );
-        publish(USER_JOINED, AuthEvent.of(
-                USER_JOINED,
-                user.getOrganization().getId(),
-                user.getId(),
-                payload
-        ));
+        publish(USER_JOINED, user.getOrganization().getId(), user.getId(), payload);
     }
 
-    private void publish(String routingKey, AuthEvent<?> event) {
+    private <T> void publish(String routingKey, Long organizationId, Long actorId, T payload) {
+        DomainEvent<T> event = DomainEvent.of(routingKey, organizationId, actorId, payload);
         try {
             rabbitTemplate.convertAndSend(RabbitMQConfig.AUTH_EXCHANGE, routingKey, event);
         } catch (Exception e) {
-            // Event publish başarısız olsa bile ana iş akışını bozma
             log.error("Event publish hatası — routingKey={}, eventId={}",
                     routingKey, event.eventId(), e);
         }

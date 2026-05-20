@@ -1,11 +1,11 @@
 package com.akitflow.signature.service;
 
-import com.akitflow.signature.dto.request.BatchSignatureRequest;
-import com.akitflow.signature.dto.response.SignatureResponse;
+import com.akitflow.common.client.dto.BatchSignatureRequest;
+import com.akitflow.common.client.dto.SignatureDto;
 
 import java.util.List;
 
 public interface SignatureRequestService {
 
-    List<SignatureResponse> sendForSignature(BatchSignatureRequest request, Long organizationId);
+    List<SignatureDto> sendForSignature(BatchSignatureRequest request, Long organizationId);
 }

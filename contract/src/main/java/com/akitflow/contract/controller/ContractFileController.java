@@ -2,7 +2,7 @@ package com.akitflow.contract.controller;
 
 import com.akitflow.contract.dto.request.GeneratePdfRequest;
 import com.akitflow.contract.dto.response.ContractFileResponse;
-import com.akitflow.contract.security.HeaderPrincipal;
+import com.akitflow.common.security.HeaderPrincipal;
 import com.akitflow.contract.service.ContractFileService;
 import com.akitflow.contract.service.ContractPdfService;
 import lombok.RequiredArgsConstructor;

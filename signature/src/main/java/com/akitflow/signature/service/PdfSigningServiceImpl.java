@@ -8,6 +8,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
@@ -22,6 +23,7 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
@@ -42,7 +44,7 @@ public class PdfSigningServiceImpl implements PdfSigningService {
                        String signerName, String reason) throws Exception {
         PDDocument doc = Loader.loadPDF(pdfContent);
         addSignatureAppearance(doc, signerName, reason);
-        PDSignature pdSig = createPdSignature(doc, signerName, reason);
+        PDSignature pdSig = createPdSignature(signerName, reason);
 
         SignatureInterface signer = content -> {
             try {
@@ -78,6 +80,9 @@ public class PdfSigningServiceImpl implements PdfSigningService {
         String now = dateFmt.format(Instant.now());
         String tsLabel = "Europe/Istanbul".equals(a.timezone()) ? " (TSI)" : "";
 
+        PDType0Font unicodeFont = loadUnicodeFont(doc);
+        boolean useUnicode = unicodeFont != null;
+
         try (PDPageContentStream cs = new PDPageContentStream(
                 doc, page, PDPageContentStream.AppendMode.APPEND, true)) {
 
@@ -86,7 +91,6 @@ public class PdfSigningServiceImpl implements PdfSigningService {
             cs.addRect(x, y, boxW, boxH);
             cs.stroke();
 
-            PDType1Font f = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
             PDType1Font fb = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
             int fs = a.fontSize();
 
@@ -94,47 +98,50 @@ public class PdfSigningServiceImpl implements PdfSigningService {
             cs.setFont(fb, fs);
             cs.setNonStrokingColor(0.2f, 0.2f, 0.2f);
             cs.newLineAtOffset(x + 8, y + boxH - 14);
-            cs.showText(a.labelTr());
+            cs.showText(useUnicode ? a.labelTr() : toAscii(a.labelTr()));
             cs.endText();
 
+            String nameText = "Imzaci: " + truncate(signerName, 40);
+            String reasonText = "Sozlesme: " + truncate(reason, 40);
+
             cs.beginText();
-            cs.setFont(f, fs);
+            cs.setFont(useUnicode ? unicodeFont : fb, fs);
             cs.setNonStrokingColor(0.2f, 0.2f, 0.2f);
             cs.newLineAtOffset(x + 8, y + boxH - 28);
-            cs.showText("Imzaci: " + truncate(signerName, 40));
+            cs.showText(useUnicode ? nameText : toAscii(nameText));
             cs.endText();
 
             cs.beginText();
-            cs.setFont(f, fs);
+            cs.setFont(useUnicode ? unicodeFont : fb, fs);
             cs.newLineAtOffset(x + 8, y + boxH - 40);
-            cs.showText("Sozlesme: " + truncate(reason, 40));
+            cs.showText(useUnicode ? reasonText : toAscii(reasonText));
             cs.endText();
 
             int smallFs = Math.max(fs - 1, 5);
             cs.beginText();
-            cs.setFont(f, smallFs);
+            cs.setFont(useUnicode ? unicodeFont : fb, smallFs);
             cs.setNonStrokingColor(0.4f, 0.4f, 0.4f);
             cs.newLineAtOffset(x + 8, y + boxH - 52);
             cs.showText("Tarih: " + now + tsLabel);
             cs.endText();
 
             cs.beginText();
-            cs.setFont(f, Math.max(fs - 2, 4));
+            cs.setFont(useUnicode ? unicodeFont : fb, Math.max(fs - 2, 4));
             cs.setNonStrokingColor(0.5f, 0.5f, 0.5f);
             cs.newLineAtOffset(x + 8, y + 8);
-            cs.showText("AkitFlow e-Imza — 5070 sayili kanun kapsaminda degildir");
+            String disclaimer = "AkitFlow e-Imza — 5070 sayili kanun kapsaminda degildir";
+            cs.showText(useUnicode ? disclaimer : toAscii(disclaimer));
             cs.endText();
         }
     }
 
-    private PDSignature createPdSignature(PDDocument doc, String signerName, String reason) throws java.io.IOException {
+    private PDSignature createPdSignature(String signerName, String reason) {
         PDSignature sig = new PDSignature();
         sig.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
         sig.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
         sig.setName(signerName);
         sig.setReason(reason);
         sig.setSignDate(Calendar.getInstance());
-        doc.addSignature(sig);
         return sig;
     }
 
@@ -158,6 +165,43 @@ public class PdfSigningServiceImpl implements PdfSigningService {
                 new CMSProcessableByteArray(content), false);
 
         return signedData.getEncoded();
+    }
+
+    private PDType0Font loadUnicodeFont(PDDocument doc) {
+        for (String path : new String[]{
+                "C:\\Windows\\Fonts\\arial.ttf",
+                "C:\\Windows\\Fonts\\calibri.ttf",
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+                "/System/Library/Fonts/Supplemental/Arial.ttf"
+        }) {
+            File f = new File(path);
+            if (f.exists()) {
+                try {
+                    return PDType0Font.load(doc, f);
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        return null;
+    }
+
+    private String toAscii(String s) {
+        if (s == null) return "";
+        StringBuilder sb = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            sb.append(switch (s.charAt(i)) {
+                case 'ş', 'Ş' -> 's';
+                case 'ğ', 'Ğ' -> 'g';
+                case 'İ', 'ı' -> 'i';
+                case 'ç', 'Ç' -> 'c';
+                case 'ü', 'Ü' -> 'u';
+                case 'ö', 'Ö' -> 'o';
+                case '—' -> '-';
+                default -> s.charAt(i);
+            });
+        }
+        return sb.toString();
     }
 
     private String truncate(String s, int maxLen) {

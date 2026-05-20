@@ -1,6 +1,6 @@
 package com.akitflow.contract.dto.response;
 
-import com.akitflow.contract.client.SignatureClient;
+import com.akitflow.common.client.dto.SignatureDto;
 
 import java.time.Instant;
 
@@ -19,7 +19,7 @@ public record SignatureSummaryResponse(
         Instant expiresAt
 ) {
 
-    public static SignatureSummaryResponse from(SignatureClient.SignatureDto dto) {
+    public static SignatureSummaryResponse from(SignatureDto dto) {
         return new SignatureSummaryResponse(
                 dto.id(),
                 dto.contractId(),

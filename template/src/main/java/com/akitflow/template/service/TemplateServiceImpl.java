@@ -8,11 +8,11 @@ import com.akitflow.template.dto.request.TemplatePreviewRequest;
 import com.akitflow.template.dto.request.TemplateUpdateRequest;
 import com.akitflow.template.dto.response.SystemVariableResponse;
 import com.akitflow.template.dto.response.TemplatePreviewResponse;
-import com.akitflow.template.dto.response.TemplateResponse;
-import com.akitflow.template.exception.ResourceNotFoundException;
+import com.akitflow.common.client.dto.TemplateDto;
+import com.akitflow.common.exception.ResourceNotFoundException;
 import com.akitflow.template.mapper.TemplateMapper;
 import com.akitflow.template.repository.TemplateRepository;
-import com.akitflow.template.security.HeaderPrincipal;
+import com.akitflow.common.security.HeaderPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +32,7 @@ public class TemplateServiceImpl implements TemplateService {
 
     @Override
     @Transactional
-    public TemplateResponse create(TemplateCreateRequest request, HeaderPrincipal user) {
+    public TemplateDto create(TemplateCreateRequest request, HeaderPrincipal user) {
         Template entity = mapper.toEntity(request);
         entity.setOrganizationId(user.organizationId());
         entity.setCreatedBy(user.userId());
@@ -41,33 +41,33 @@ public class TemplateServiceImpl implements TemplateService {
         } else {
             entity.setVariables(new ArrayList<>());
         }
-        return mapper.toResponse(repository.save(entity));
+        return mapper.toDto(repository.save(entity));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<TemplateResponse> list(HeaderPrincipal user, TemplateCategory category) {
+    public List<TemplateDto> list(HeaderPrincipal user, TemplateCategory category) {
         List<Template> entities = category == null
                 ? repository.findAllByOrganizationId(user.organizationId())
                 : repository.findAllByOrganizationIdAndCategory(user.organizationId(), category);
-        return entities.stream().map(mapper::toResponse).toList();
+        return entities.stream().map(mapper::toDto).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public TemplateResponse get(Long id, HeaderPrincipal user) {
-        return mapper.toResponse(findOwnedOrThrow(id, user));
+    public TemplateDto get(Long id, HeaderPrincipal user) {
+        return mapper.toDto(findOwnedOrThrow(id, user));
     }
 
     @Override
     @Transactional
-    public TemplateResponse update(Long id, TemplateUpdateRequest request, HeaderPrincipal user) {
+    public TemplateDto update(Long id, TemplateUpdateRequest request, HeaderPrincipal user) {
         Template entity = findOwnedOrThrow(id, user);
         mapper.updateEntity(entity, request);
         if (request.variables() != null) {
             entity.setVariables(mapper.toDataList(request.variables()));
         }
-        return mapper.toResponse(repository.save(entity));
+        return mapper.toDto(repository.save(entity));
     }
 
     @Override

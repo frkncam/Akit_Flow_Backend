@@ -1,10 +1,10 @@
 package com.akitflow.signature.controller;
 
-import com.akitflow.signature.dto.request.BatchSignatureRequest;
+import com.akitflow.common.client.dto.BatchSignatureRequest;
+import com.akitflow.common.client.dto.SignatureDto;
+import com.akitflow.common.security.HeaderPrincipal;
 import com.akitflow.signature.dto.request.SignatureRejectRequest;
-import com.akitflow.signature.dto.response.SignatureResponse;
 import com.akitflow.signature.dto.response.SignatureViewResponse;
-import com.akitflow.signature.security.HeaderPrincipal;
 import com.akitflow.signature.service.SignatureDecisionService;
 import com.akitflow.signature.service.SignaturePublicViewService;
 import com.akitflow.signature.service.SignatureRequestService;
@@ -26,14 +26,14 @@ public class SignatureController {
     private final SignatureDecisionService decisionService;
 
     @PostMapping("/batch")
-    public List<SignatureResponse> sendForSignature(@Valid @RequestBody BatchSignatureRequest request,
-                                                    @AuthenticationPrincipal HeaderPrincipal user) {
+    public List<SignatureDto> sendForSignature(@Valid @RequestBody BatchSignatureRequest request,
+                                                @AuthenticationPrincipal HeaderPrincipal user) {
         return requestService.sendForSignature(request, user.organizationId());
     }
 
     @GetMapping("/contracts/{contractId}")
-    public List<SignatureResponse> listForContract(@PathVariable Long contractId,
-                                                   @AuthenticationPrincipal HeaderPrincipal user) {
+    public List<SignatureDto> listForContract(@PathVariable Long contractId,
+                                               @AuthenticationPrincipal HeaderPrincipal user) {
         return viewService.listForContract(contractId, user.organizationId());
     }
 

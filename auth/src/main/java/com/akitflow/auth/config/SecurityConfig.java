@@ -1,6 +1,6 @@
 package com.akitflow.auth.config;
 
-import com.akitflow.auth.security.TrustedHeaderAuthFilter;
+import com.akitflow.common.security.TrustedHeaderAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -13,19 +13,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-/**
- * auth-service no longer validates incoming JWTs. The api-gateway does
- * that and forwards user info as trusted headers (X-User-Id, X-Org-Id,
- * X-User-Email, X-User-Role). See TrustedHeaderAuthFilter.
- *
- * auth-service still signs (issues) JWTs at login/register/refresh via
- * JwtEncoder; for that it keeps its private RSA key.
- *
- * Public endpoints (no headers required):
- *   - POST /api/v1/auth/register, /login, /refresh, /invite/accept
- *   - GET  /oauth2/jwks (public key for downstream services)
- *   - GET  /actuator/health
- */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity

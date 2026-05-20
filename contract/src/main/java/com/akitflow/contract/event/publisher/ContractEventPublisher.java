@@ -1,18 +1,18 @@
 package com.akitflow.contract.event.publisher;
 
 import com.akitflow.contract.config.RabbitMQConfig;
-import com.akitflow.contract.event.ContractEvent;
-import com.akitflow.contract.event.payload.ContractCreatedPayload;
-import com.akitflow.contract.event.payload.ContractExpiringSoonPayload;
-import com.akitflow.contract.event.payload.ContractStatusChangedPayload;
+import com.akitflow.common.event.DomainEvent;
+import com.akitflow.common.event.payload.ContractCreatedPayload;
+import com.akitflow.common.event.payload.ContractExpiringSoonPayload;
+import com.akitflow.common.event.payload.ContractStatusChangedPayload;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class ContractEventPublisher {
 
     private final RabbitTemplate rabbitTemplate;
@@ -30,8 +30,8 @@ public class ContractEventPublisher {
     }
 
     private <T> void publish(String routingKey, Long organizationId, Long actorId, T payload) {
+        DomainEvent<T> event = DomainEvent.of(routingKey, organizationId, actorId, payload);
         try {
-            ContractEvent<T> event = ContractEvent.of(routingKey, organizationId, actorId, payload);
             rabbitTemplate.convertAndSend(RabbitMQConfig.CONTRACT_EXCHANGE, routingKey, event);
             log.debug("Event published: {} eventId={}", routingKey, event.eventId());
         } catch (Exception e) {

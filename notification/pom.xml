@@ -31,8 +31,14 @@
 		<spring-cloud.version>2025.0.2</spring-cloud.version>
 		<mapstruct.version>1.6.3</mapstruct.version>
 		<springdoc.version>2.8.6</springdoc.version>
+		<akitflow-common.version>1.0.0</akitflow-common.version>
 	</properties>
 	<dependencies>
+		<dependency>
+			<groupId>com.akitflow</groupId>
+			<artifactId>common</artifactId>
+			<version>${akitflow-common.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>

@@ -1,11 +1,13 @@
 package com.akitflow.template.mapper;
 
+import com.akitflow.common.client.dto.TemplateDto;
+import com.akitflow.common.client.dto.TemplateVariableDto;
 import com.akitflow.template.domain.Template;
 import com.akitflow.template.domain.TemplateVariableData;
-import com.akitflow.template.dto.common.TemplateVariableDto;
+import com.akitflow.template.domain.TemplateVariableSource;
+import com.akitflow.template.domain.TemplateVariableType;
 import com.akitflow.template.dto.request.TemplateCreateRequest;
 import com.akitflow.template.dto.request.TemplateUpdateRequest;
-import com.akitflow.template.dto.response.TemplateResponse;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -37,10 +39,15 @@ public interface TemplateMapper {
     @Mapping(target = "updatedAt", ignore = true)
     void updateEntity(@MappingTarget Template entity, TemplateUpdateRequest request);
 
-    TemplateResponse toResponse(Template entity);
+    @Mapping(target = "category", expression = "java(entity.getCategory() != null ? entity.getCategory().name() : null)")
+    TemplateDto toDto(Template entity);
 
+    @Mapping(target = "type", expression = "java(dto.type() != null ? TemplateVariableType.valueOf(dto.type()) : null)")
+    @Mapping(target = "source", expression = "java(dto.source() != null ? TemplateVariableSource.valueOf(dto.source()) : null)")
     TemplateVariableData toData(TemplateVariableDto dto);
 
+    @Mapping(target = "type", expression = "java(data.type() != null ? data.type().name() : null)")
+    @Mapping(target = "source", expression = "java(data.source() != null ? data.source().name() : null)")
     TemplateVariableDto toDto(TemplateVariableData data);
 
     List<TemplateVariableData> toDataList(List<TemplateVariableDto> dtos);

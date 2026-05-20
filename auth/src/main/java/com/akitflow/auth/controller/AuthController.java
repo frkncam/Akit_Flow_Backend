@@ -3,7 +3,7 @@ package com.akitflow.auth.controller;
 import com.akitflow.auth.dto.request.*;
 import com.akitflow.auth.dto.response.AuthResponse;
 import com.akitflow.auth.dto.response.MessageResponse;
-import com.akitflow.auth.security.HeaderPrincipal;
+import com.akitflow.common.security.HeaderPrincipal;
 import com.akitflow.auth.service.AuthService;
 import com.akitflow.auth.service.InviteService;
 import jakarta.validation.Valid;

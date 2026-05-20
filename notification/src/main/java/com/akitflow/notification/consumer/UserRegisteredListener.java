@@ -1,9 +1,9 @@
 package com.akitflow.notification.consumer;
 
+import com.akitflow.common.event.DomainEvent;
+import com.akitflow.common.event.payload.UserRegisteredPayload;
 import com.akitflow.notification.config.RabbitMQConfig;
 import com.akitflow.notification.domain.enums.EmailType;
-import com.akitflow.notification.event.AuthEventEnvelope;
-import com.akitflow.notification.event.payload.UserRegisteredPayload;
 import com.akitflow.notification.service.EmailService;
 import com.akitflow.notification.service.IdempotencyService;
 import com.akitflow.notification.service.TemplateService;
@@ -24,7 +24,7 @@ public class UserRegisteredListener {
     private final EmailService emails;
 
     @RabbitListener(queues = RabbitMQConfig.Q_USER_REGISTERED)
-    public void onMessage(AuthEventEnvelope<UserRegisteredPayload> event) {
+    public void onMessage(DomainEvent<UserRegisteredPayload> event) {
         log.info("user.registered alındı: eventId={}", event.eventId());
 
         if (!idempotency.markIfNew(event.eventId(), event.eventType())) {

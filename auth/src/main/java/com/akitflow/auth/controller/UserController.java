@@ -3,7 +3,7 @@ package com.akitflow.auth.controller;
 import com.akitflow.auth.dto.request.ChangePasswordRequest;
 import com.akitflow.auth.dto.request.UpdateProfileRequest;
 import com.akitflow.auth.dto.response.UserResponse;
-import com.akitflow.auth.security.HeaderPrincipal;
+import com.akitflow.common.security.HeaderPrincipal;
 import com.akitflow.auth.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

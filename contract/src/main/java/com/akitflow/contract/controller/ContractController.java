@@ -7,7 +7,7 @@ import com.akitflow.contract.dto.request.SendForSignatureRequest;
 import com.akitflow.contract.dto.response.ContractResponse;
 import com.akitflow.contract.dto.response.PageResponse;
 import com.akitflow.contract.dto.response.SignatureSummaryResponse;
-import com.akitflow.contract.security.HeaderPrincipal;
+import com.akitflow.common.security.HeaderPrincipal;
 import com.akitflow.contract.service.ContractService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
 package com.akitflow.notification.consumer;
 
+import com.akitflow.common.event.DomainEvent;
 import com.akitflow.notification.config.RabbitMQConfig;
 import com.akitflow.notification.domain.enums.EmailType;
-import com.akitflow.notification.event.ContractEventEnvelope;
 import com.akitflow.notification.event.payload.ContractSignedPayload;
 import com.akitflow.notification.service.EmailService;
 import com.akitflow.notification.service.IdempotencyService;
@@ -26,7 +26,7 @@ public class ContractSignedListener {
     private final EmailService emails;
 
     @RabbitListener(queues = RabbitMQConfig.Q_CONTRACT_SIGNED)
-    public void onMessage(ContractEventEnvelope<ContractSignedPayload> event) {
+    public void onMessage(DomainEvent<ContractSignedPayload> event) {
         log.info("contract.signed alındı: eventId={}", event.eventId());
 
         if (!idempotency.markIfNew(event.eventId(), event.eventType())) {

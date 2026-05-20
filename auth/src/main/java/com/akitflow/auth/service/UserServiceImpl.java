@@ -4,7 +4,7 @@ import com.akitflow.auth.dto.request.ChangePasswordRequest;
 import com.akitflow.auth.dto.request.UpdateProfileRequest;
 import com.akitflow.auth.dto.response.UserResponse;
 import com.akitflow.auth.exception.InvalidCredentialsException;
-import com.akitflow.auth.exception.ResourceNotFoundException;
+import com.akitflow.common.exception.ResourceNotFoundException;
 import com.akitflow.auth.mapper.UserMapper;
 import com.akitflow.auth.repository.RefreshTokenRepository;
 import com.akitflow.auth.repository.UserRepository;

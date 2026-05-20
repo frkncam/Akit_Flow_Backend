@@ -12,7 +12,7 @@ import com.akitflow.auth.event.publisher.AuthEventPublisher;
 import com.akitflow.auth.exception.EmailAlreadyExistsException;
 import com.akitflow.auth.exception.InviteTokenExpiredException;
 import com.akitflow.auth.exception.InvalidTokenException;
-import com.akitflow.auth.exception.ResourceNotFoundException;
+import com.akitflow.common.exception.ResourceNotFoundException;
 import com.akitflow.auth.mapper.UserMapper;
 import com.akitflow.auth.repository.InviteTokenRepository;
 import com.akitflow.auth.repository.OrganizationRepository;
