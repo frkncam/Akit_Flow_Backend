@@ -26,7 +26,7 @@ public class StubESignatureProvider implements ESignatureProvider {
                         SignerInfo::email,
                         s -> UUID.randomUUID().toString()
                 ));
-        log.info("[stub-signature] {} signer için imza isteği oluşturuldu (contract='{}')",
+        log.info("[stub-signature] {} signer için signature request created (contract='{}')",
                 refs.size(), request.contractTitle());
         return new ProviderSignatureResult(PROVIDER_NAME, refs);
     }

@@ -50,7 +50,7 @@ public class PdfSigningServiceImpl implements PdfSigningService {
             try {
                 return buildCmsSignedData(content.readAllBytes(), cert, key);
             } catch (Exception e) {
-                throw new java.io.IOException("CMS imza oluşturulamadı", e);
+                throw new java.io.IOException("CMS signature creation failed", e);
             }
         };
 
@@ -102,7 +102,7 @@ public class PdfSigningServiceImpl implements PdfSigningService {
             cs.endText();
 
             String nameText = "Imzaci: " + truncate(signerName, 40);
-            String reasonText = "Sozlesme: " + truncate(reason, 40);
+            String reasonText = "Contract: " + truncate(reason, 40);
 
             cs.beginText();
             cs.setFont(useUnicode ? unicodeFont : fb, fs);
@@ -129,7 +129,7 @@ public class PdfSigningServiceImpl implements PdfSigningService {
             cs.setFont(useUnicode ? unicodeFont : fb, Math.max(fs - 2, 4));
             cs.setNonStrokingColor(0.5f, 0.5f, 0.5f);
             cs.newLineAtOffset(x + 8, y + 8);
-            String disclaimer = "AkitFlow e-Imza — 5070 sayili kanun kapsaminda degildir";
+            String disclaimer = "AkitFlow e-Signature — not under Law No. 5070";
             cs.showText(useUnicode ? disclaimer : toAscii(disclaimer));
             cs.endText();
         }

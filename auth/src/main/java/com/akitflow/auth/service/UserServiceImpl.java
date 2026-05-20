@@ -27,14 +27,14 @@ public class UserServiceImpl implements UserService {
     public UserResponse getMyProfile(Long userId) {
         return userRepository.findById(userId)
                 .map(userMapper::toResponse)
-                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı."));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
     }
 
     @Override
     @Transactional
     public UserResponse updateMyProfile(Long userId, UpdateProfileRequest request) {
         var user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı."));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
 
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
@@ -46,7 +46,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void changePassword(Long userId, ChangePasswordRequest request) {
         var user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı."));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
 
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
             throw new InvalidCredentialsException();

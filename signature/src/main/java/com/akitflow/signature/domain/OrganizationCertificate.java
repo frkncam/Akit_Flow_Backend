@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
@@ -12,6 +13,7 @@ import java.time.Instant;
 @Entity
 @Table(schema = "signature_schema", name = "organization_certificates")
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

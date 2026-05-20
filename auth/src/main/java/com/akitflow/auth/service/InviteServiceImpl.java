@@ -44,17 +44,17 @@ public class InviteServiceImpl implements InviteService {
     @Override
     @Transactional
     public void invite(InviteRequest request, Long invitedById, Long organizationId) {
-        // Aktif davet zaten varsa idempotent davran
+        // Idempotent: skip if active invite already exists
         if (inviteTokenRepository.existsByEmailAndOrganizationIdAndUsedAtIsNull(
                 request.getEmail(), organizationId)) {
             return;
         }
 
         User inviter = userRepository.findById(invitedById)
-                .orElseThrow(() -> new ResourceNotFoundException("Davet eden kullanıcı bulunamadı."));
+                .orElseThrow(() -> new ResourceNotFoundException("Inviting user not found."));
 
         var organization = organizationRepository.findById(organizationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Organizasyon bulunamadı."));
+                .orElseThrow(() -> new ResourceNotFoundException("Organization not found."));
 
         String rawToken = jwtService.generateRefreshToken();
 
@@ -78,14 +78,14 @@ public class InviteServiceImpl implements InviteService {
         String tokenHash = jwtService.hashToken(request.getToken());
 
         InviteToken inviteToken = inviteTokenRepository.findByTokenHash(tokenHash)
-                .orElseThrow(() -> new InvalidTokenException("Davet token geçersiz."));
+                .orElseThrow(() -> new InvalidTokenException("Invite token is invalid."));
 
         if (inviteToken.getUsedAt() != null) {
-            throw new InviteTokenExpiredException("Davet zaten kullanılmış.");
+            throw new InviteTokenExpiredException("Invite already used.");
         }
 
         if (inviteToken.getExpiresAt().isBefore(Instant.now())) {
-            throw new InviteTokenExpiredException("Davet süresi dolmuş.");
+            throw new InviteTokenExpiredException("Invite has expired.");
         }
 
         if (userRepository.existsByEmail(inviteToken.getEmail())) {

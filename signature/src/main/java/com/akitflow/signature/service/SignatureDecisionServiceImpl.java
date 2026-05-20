@@ -111,7 +111,7 @@ public class SignatureDecisionServiceImpl implements SignatureDecisionService {
             signedPdf = pdfSigningService.sign(originalPdf, certKey.certificate(),
                     certKey.privateKey(), sig.getSignerName(), sig.getContractTitle());
         } catch (Exception e) {
-            throw new PdfSigningFailedException("PDF imzalanamadı: " + e.getMessage(), e);
+            throw new PdfSigningFailedException("PDF signing failed: " + e.getMessage(), e);
         }
 
         String signedKey = "signed-pdfs/" + sig.getContractId() + "/" + sig.getId() + ".pdf";
@@ -132,7 +132,7 @@ public class SignatureDecisionServiceImpl implements SignatureDecisionService {
         try {
             metadataJson = objectMapper.writeValueAsString(metadata);
         } catch (Exception e) {
-            throw new PdfSigningFailedException("Metadata JSON oluşturulamadı", e);
+            throw new PdfSigningFailedException("Metadata JSON creation failed", e);
         }
 
         log.info("PDF signed for signature id={}, storageKey={}", sig.getId(), signedKey);
@@ -143,9 +143,9 @@ public class SignatureDecisionServiceImpl implements SignatureDecisionService {
 
     private Signature loadValidPending(String token) {
         Signature sig = signatureRepository.findByToken(token)
-                .orElseThrow(() -> new ResourceNotFoundException("İmza linki geçersiz"));
+                .orElseThrow(() -> new ResourceNotFoundException("Invalid signature link"));
         if (sig.getStatus() != SignatureStatus.PENDING) {
-            throw new ResourceNotFoundException("İmza linki artık geçerli değil (durum: " + sig.getStatus() + ")");
+            throw new ResourceNotFoundException("Signature link no longer valid (status: " + sig.getStatus() + ")");
         }
         if (sig.getExpiresAt().isBefore(Instant.now())) {
             throw new SignatureExpiredException();

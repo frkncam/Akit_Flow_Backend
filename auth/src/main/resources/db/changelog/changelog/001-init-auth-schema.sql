@@ -48,8 +48,3 @@ CREATE INDEX idx_users_org        ON auth_schema.users(organization_id);
 CREATE INDEX idx_users_email      ON auth_schema.users(email);
 CREATE INDEX idx_refresh_user     ON auth_schema.refresh_tokens(user_id) WHERE revoked_at IS NULL;
 CREATE INDEX idx_invite_email_org ON auth_schema.invite_tokens(email, organization_id) WHERE used_at IS NULL;
-
---rollback DROP TABLE auth_schema.invite_tokens;
---rollback DROP TABLE auth_schema.refresh_tokens;
---rollback DROP TABLE auth_schema.users;
---rollback DROP TABLE auth_schema.organizations;

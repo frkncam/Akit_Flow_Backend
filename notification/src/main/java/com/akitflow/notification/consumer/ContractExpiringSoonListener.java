@@ -46,10 +46,10 @@ public class ContractExpiringSoonListener {
         ));
 
         String subject = switch (p.daysRemaining()) {
-            case 1 -> "Sözleşme yarın sona eriyor: " + p.title();
-            case 7 -> "Sözleşme 1 hafta içinde sona eriyor: " + p.title();
-            case 30 -> "Sözleşme 30 gün içinde sona eriyor: " + p.title();
-            default -> "Sözleşme yakında sona eriyor: " + p.title();
+            case 1 -> "Contract expires tomorrow: " + p.title();
+            case 7 -> "Contract expires in 1 week: " + p.title();
+            case 30 -> "Contract expires in 30 days: " + p.title();
+            default -> "Contract expires soon: " + p.title();
         };
 
         emails.send(

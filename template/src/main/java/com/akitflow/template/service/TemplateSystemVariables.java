@@ -10,9 +10,9 @@ public final class TemplateSystemVariables {
     private TemplateSystemVariables() {}
 
     public static final List<SystemVariableResponse> CATALOGUE = List.of(
-            new SystemVariableResponse("contract.title", "Sözleşme Başlığı", TemplateVariableType.TEXT),
+            new SystemVariableResponse("contract.title", "Contract Title", TemplateVariableType.TEXT),
             new SystemVariableResponse("contract.description", "Açıklama", TemplateVariableType.MULTILINE),
-            new SystemVariableResponse("contract.contractType", "Sözleşme Tipi", TemplateVariableType.TEXT),
+            new SystemVariableResponse("contract.contractType", "Contract Type", TemplateVariableType.TEXT),
             new SystemVariableResponse("contract.status", "Durum", TemplateVariableType.TEXT),
             new SystemVariableResponse("contract.startDate", "Başlangıç Tarihi", TemplateVariableType.DATE),
             new SystemVariableResponse("contract.endDate", "Bitiş Tarihi", TemplateVariableType.DATE),

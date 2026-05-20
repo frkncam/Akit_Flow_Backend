@@ -4,8 +4,8 @@ import com.akitflow.auth.dto.request.UpdateMemberRoleRequest;
 import com.akitflow.auth.dto.request.UpdateOrganizationRequest;
 import com.akitflow.auth.dto.response.OrganizationResponse;
 import com.akitflow.auth.dto.response.UserResponse;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface OrganizationService {
 
@@ -13,7 +13,7 @@ public interface OrganizationService {
 
     OrganizationResponse updateMyOrganization(Long organizationId, UpdateOrganizationRequest request);
 
-    List<UserResponse> getMembers(Long organizationId);
+    Page<UserResponse> getMembers(Long organizationId, Pageable pageable);
 
     void removeMember(Long organizationId, Long targetUserId);
 

@@ -38,7 +38,7 @@ public class ContractFileServiceImpl implements ContractFileService {
         }
 
         Contract contract = contractRepository.findByIdAndOrganizationId(contractId, orgId)
-                .orElseThrow(() -> new ResourceNotFoundException("Sözleşme bulunamadı: id=" + contractId));
+                .orElseThrow(() -> new ResourceNotFoundException("Contract not found: id=" + contractId));
 
         int nextVersion = fileRepository.findMaxVersionByContractId(contractId) + 1;
         String safeName = sanitize(file.getOriginalFilename());
@@ -71,7 +71,7 @@ public class ContractFileServiceImpl implements ContractFileService {
     @Transactional(readOnly = true)
     public List<ContractFileResponse> list(Long contractId, HeaderPrincipal user) {
         contractRepository.findByIdAndOrganizationId(contractId, user.organizationId())
-                .orElseThrow(() -> new ResourceNotFoundException("Sözleşme bulunamadı: id=" + contractId));
+                .orElseThrow(() -> new ResourceNotFoundException("Contract not found: id=" + contractId));
         return fileRepository.findAllByContract_IdOrderByVersionDesc(contractId).stream()
                 .map(this::withDownloadUrl)
                 .toList();
@@ -81,7 +81,7 @@ public class ContractFileServiceImpl implements ContractFileService {
     @Transactional(readOnly = true)
     public ContractFileResponse getOne(Long fileId, HeaderPrincipal user) {
         ContractFile f = fileRepository.findByIdAndContract_OrganizationId(fileId, user.organizationId())
-                .orElseThrow(() -> new ResourceNotFoundException("Dosya bulunamadı: id=" + fileId));
+                .orElseThrow(() -> new ResourceNotFoundException("File not found: id=" + fileId));
         return withDownloadUrl(f);
     }
 

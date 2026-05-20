@@ -50,7 +50,7 @@ public class JwtServiceImpl implements JwtService {
             byte[] hash = digest.digest(rawToken.getBytes());
             return Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
         } catch (Exception e) {
-            throw new IllegalStateException("Token hash'lenemedi", e);
+            throw new IllegalStateException("Token hashing failed", e);
         }
     }
 }

@@ -50,15 +50,15 @@ public class EmailServiceImpl implements EmailService {
             logEntry.setSentAt(Instant.now());
             emailLogRepository.save(logEntry);
 
-            log.info("Mail gönderildi: type={} to={} eventId={}", type, to, eventId);
+            log.info("Email sent: type={} to={} eventId={}", type, to, eventId);
         } catch (Exception e) {
             logEntry.setStatus(EmailStatus.FAILED);
             logEntry.setErrorMessage(e.getMessage());
             emailLogRepository.save(logEntry);
 
-            log.error("Mail gönderimi başarısız: type={} to={} eventId={}", type, to, eventId, e);
-            // Spring Retry / DLQ tetiklensin diye yeniden fırlat
-            throw new RuntimeException("Mail gönderimi başarısız: " + e.getMessage(), e);
+            log.error("Email delivery failed: type={} to={} eventId={}", type, to, eventId, e);
+            // Re-throw to trigger Spring Retry / DLQ
+            throw new RuntimeException("Email delivery failed: " + e.getMessage(), e);
         }
     }
 }

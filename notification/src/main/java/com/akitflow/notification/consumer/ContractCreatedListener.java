@@ -51,7 +51,7 @@ public class ContractCreatedListener {
         emails.send(
                 EmailType.CONTRACT_CREATED,
                 recipient,
-                "Yeni sözleşme oluşturuldu: " + p.title(),
+                "New contract created: " + p.title(),
                 html,
                 event.eventId()
         );

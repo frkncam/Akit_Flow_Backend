@@ -94,14 +94,14 @@ public class AuthServiceImpl implements AuthService {
         String tokenHash = jwtService.hashToken(request.getRefreshToken());
 
         RefreshToken refreshToken = refreshTokenRepository.findByTokenHash(tokenHash)
-                .orElseThrow(() -> new InvalidTokenException("Refresh token geçersiz."));
+                .orElseThrow(() -> new InvalidTokenException("Refresh token is invalid."));
 
         if (refreshToken.getRevokedAt() != null) {
             throw new InvalidTokenException("Refresh token iptal edilmiş.");
         }
 
         if (refreshToken.getExpiresAt().isBefore(Instant.now())) {
-            throw new InvalidTokenException("Refresh token süresi dolmuş.");
+            throw new InvalidTokenException("Refresh token expired.");
         }
 
         refreshToken.setRevokedAt(Instant.now());
