@@ -1,7 +1,6 @@
 package com.akitflow.auth.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 

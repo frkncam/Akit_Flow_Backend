@@ -50,10 +50,10 @@ public class ContractPdfServiceImpl implements ContractPdfService {
         Long orgId = user.organizationId();
 
         Contract contract = contractRepository.findByIdAndOrganizationId(contractId, orgId)
-                .orElseThrow(() -> new ResourceNotFoundException("Sözleşme bulunamadı: id=" + contractId));
+                .orElseThrow(() -> new ResourceNotFoundException("Contract not found: id=" + contractId));
         TemplateDto template = templateClient.getTemplate(templateId, orgId);
         if (template == null) {
-            throw new ResourceNotFoundException("Template bulunamadı: id=" + templateId);
+            throw new ResourceNotFoundException("Template not found: id=" + templateId);
         }
 
         Map<String, Object> contractView = buildContractView(contract);

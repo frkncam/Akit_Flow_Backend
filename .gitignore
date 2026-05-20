@@ -9,6 +9,15 @@ logs/
 # Maven build output
 **/target/
 
+# Environment (contains secrets)
+.env
+
+# Cryptographic keys
+*.pem
+*.key
+*.p8
+*.p12
+
 # OS
 .DS_Store
 Thumbs.db

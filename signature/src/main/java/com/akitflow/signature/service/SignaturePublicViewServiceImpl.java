@@ -27,7 +27,7 @@ public class SignaturePublicViewServiceImpl implements SignaturePublicViewServic
     @Transactional(readOnly = true)
     public SignatureViewResponse getByToken(String token) {
         var sig = signatureRepository.findByToken(token)
-                .orElseThrow(() -> new ResourceNotFoundException("İmza linki geçersiz"));
+                .orElseThrow(() -> new ResourceNotFoundException("Invalid signature link"));
         if (sig.getExpiresAt().isBefore(Instant.now())) {
             throw new SignatureExpiredException();
         }

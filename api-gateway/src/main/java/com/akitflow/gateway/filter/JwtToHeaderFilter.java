@@ -52,10 +52,7 @@ public class JwtToHeaderFilter implements GlobalFilter, Ordered {
                     headers.set("X-User-Role", jwt.getClaimAsString("role"));
                 })
                 .build();
-        log.debug("JWT → headers: userId={}, orgId={}, role={}",
-                jwt.getSubject(),
-                jwt.getClaimAsString("organizationId"),
-                jwt.getClaimAsString("role"));
+        log.debug("JWT mapped to downstream headers: userId={}", jwt.getSubject());
         return exchange.mutate().request(mutated).build();
     }
 

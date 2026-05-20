@@ -43,7 +43,7 @@ public class UserInvitedListener {
         emails.send(
                 EmailType.INVITE,
                 p.email(),
-                p.organizationName() + " sizi davet etti",
+                p.organizationName() + " invited you to join",
                 html,
                 event.eventId()
         );

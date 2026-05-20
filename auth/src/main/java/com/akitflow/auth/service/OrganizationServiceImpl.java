@@ -15,7 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +33,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     public OrganizationResponse getMyOrganization(Long organizationId) {
         return organizationRepository.findById(organizationId)
                 .map(organizationMapper::toResponse)
-                .orElseThrow(() -> new ResourceNotFoundException("Organizasyon bulunamadı."));
+                .orElseThrow(() -> new ResourceNotFoundException("Organization not found."));
     }
 
     @Override
@@ -40,7 +41,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     public OrganizationResponse updateMyOrganization(Long organizationId,
                                                      UpdateOrganizationRequest request) {
         var organization = organizationRepository.findById(organizationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Organizasyon bulunamadı."));
+                .orElseThrow(() -> new ResourceNotFoundException("Organization not found."));
 
         organization.setName(request.getName());
         organization.setSlug(SlugUtils.toSlug(request.getName()));
@@ -50,21 +51,19 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<UserResponse> getMembers(Long organizationId) {
-        return userRepository.findAllByOrganizationId(organizationId)
-                .stream()
-                .map(userMapper::toResponse)
-                .toList();
+    public Page<UserResponse> getMembers(Long organizationId, Pageable pageable) {
+        return userRepository.findAllByOrganizationId(organizationId, pageable)
+                .map(userMapper::toResponse);
     }
 
     @Override
     @Transactional
     public void removeMember(Long organizationId, Long targetUserId) {
         var user = userRepository.findById(targetUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı."));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
 
         if (!user.getOrganization().getId().equals(organizationId)) {
-            throw new ResourceNotFoundException("Kullanıcı bu organizasyona ait değil.");
+            throw new ResourceNotFoundException("User does not belong to this organization.");
         }
 
         refreshTokenRepository.revokeAllByUserId(targetUserId);
@@ -76,10 +75,10 @@ public class OrganizationServiceImpl implements OrganizationService {
     public UserResponse updateMemberRole(Long organizationId, Long targetUserId,
                                         UpdateMemberRoleRequest request) {
         var user = userRepository.findById(targetUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı."));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
 
         if (!user.getOrganization().getId().equals(organizationId)) {
-            throw new ResourceNotFoundException("Kullanıcı bu organizasyona ait değil.");
+            throw new ResourceNotFoundException("User does not belong to this organization.");
         }
 
         user.setRole(request.getRole());

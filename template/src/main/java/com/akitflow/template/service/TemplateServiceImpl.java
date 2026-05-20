@@ -103,6 +103,6 @@ public class TemplateServiceImpl implements TemplateService {
 
     private Template findOwnedOrThrow(Long id, HeaderPrincipal user) {
         return repository.findByIdAndOrganizationId(id, user.organizationId())
-                .orElseThrow(() -> new ResourceNotFoundException("Template bulunamadı: id=" + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Template not found: id=" + id));
     }
 }

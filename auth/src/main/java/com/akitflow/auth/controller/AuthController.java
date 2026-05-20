@@ -49,7 +49,7 @@ public class AuthController {
     public MessageResponse invite(@Valid @RequestBody InviteRequest request,
                                   @AuthenticationPrincipal HeaderPrincipal user) {
         inviteService.invite(request, user.userId(), user.organizationId());
-        return new MessageResponse("Davet gönderildi.");
+        return new MessageResponse("Invitation sent.");
     }
 
     @PostMapping("/invite/accept")

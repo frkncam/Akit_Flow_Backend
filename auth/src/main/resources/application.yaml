@@ -1,11 +1,13 @@
-spring:
+﻿spring:
   application:
     name: auth-service
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/akitflow
-    username: akitflow
-    password: akitflow
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/akitflow
+    username: ${DB_USERNAME:akitflow}
+    password: ${DB_PASSWORD:akitflow}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -17,13 +19,14 @@ spring:
     default-schema: auth_schema
 
   rabbitmq:
-    host: localhost
+    host: ${RABBITMQ_HOST:localhost}
     port: 5672
-    username: guest
-    password: guest
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
 
 server:
   port: 8081
+  shutdown: graceful
 
 eureka:
   client:
@@ -33,6 +36,15 @@ eureka:
     prefer-ip-address: true
 
 management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
   endpoints:
     web:
       exposure:
@@ -40,10 +52,10 @@ management:
 
 auth:
   jwt:
-    private-key: classpath:keys/private.pem
-    public-key: classpath:keys/public.pem
-    access-token-expiry: 900       # 15 dakika (saniye)
-    refresh-token-expiry: 2592000  # 30 gün (saniye)
+    private-key: ${AUTH_PRIVATE_KEY_PATH:classpath:keys/private.pem}
+    public-key: ${AUTH_PUBLIC_KEY_PATH:classpath:keys/public.pem}
+    access-token-expiry: 900       # 15 minutes (seconds)
+    refresh-token-expiry: 2592000  # 30 days (seconds)
 
 app:
   invite-base-url: https://app.akitflow.com/invite/accept

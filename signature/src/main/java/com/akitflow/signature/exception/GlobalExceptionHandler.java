@@ -23,7 +23,7 @@ public class GlobalExceptionHandler extends BaseExceptionHandler {
     @ExceptionHandler(PdfSigningFailedException.class)
     public ResponseEntity<ErrorResponse> handlePdfSigningFailed(PdfSigningFailedException ex,
                                                                  HttpServletRequest request) {
-        log.error("PDF imzalama başarısız", ex);
+        log.error("PDF signing failed", ex);
         return build(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request);
     }
 

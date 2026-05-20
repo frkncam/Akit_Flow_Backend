@@ -48,7 +48,7 @@ public class ContractStatusChangedListener {
         emails.send(
                 EmailType.CONTRACT_STATUS_CHANGED,
                 p.actorEmail(),
-                "Sözleşme durumu güncellendi: " + p.title(),
+                "Contract status updated: " + p.title(),
                 html,
                 event.eventId()
         );

@@ -17,7 +17,7 @@ public interface JwtService {
 
     /**
      * SecureRandom ile 256-bit opaque refresh token üretir.
-     * Bu ham token client'a döner; DB'ye hash'i kaydedilir.
+     * Raw token returned to client; hash is persisted in the database.
      */
     String generateRefreshToken();
 

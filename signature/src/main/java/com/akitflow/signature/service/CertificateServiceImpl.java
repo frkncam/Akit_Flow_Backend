@@ -81,7 +81,7 @@ public class CertificateServiceImpl implements CertificateService {
         } catch (CertificateLoadingException e) {
             throw e;
         } catch (Exception e) {
-            throw new CertificateLoadingException("Sertifika oluşturulamadı: " + e.getMessage(), e);
+            throw new CertificateLoadingException("Certificate creation failed: " + e.getMessage(), e);
         }
     }
 

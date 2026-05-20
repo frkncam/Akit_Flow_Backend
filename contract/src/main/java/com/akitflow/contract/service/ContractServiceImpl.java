@@ -192,7 +192,7 @@ public class ContractServiceImpl implements ContractService {
 
     private Contract findOwnedOrThrow(Long id, HeaderPrincipal user) {
         return contractRepository.findByIdAndOrganizationId(id, user.organizationId())
-                .orElseThrow(() -> new ResourceNotFoundException("Sözleşme bulunamadı: id=" + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Contract not found: id=" + id));
     }
 
     private ContractResponse toResponse(Contract c) {

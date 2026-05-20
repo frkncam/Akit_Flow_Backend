@@ -51,7 +51,7 @@ public class MinioServiceImpl implements MinioService {
                     .contentType(contentType)
                     .build());
         } catch (Exception e) {
-            throw new IllegalStateException("MinIO upload başarısız: " + e.getMessage(), e);
+            throw new IllegalStateException("MinIO upload failed: " + e.getMessage(), e);
         }
     }
 
@@ -77,7 +77,7 @@ public class MinioServiceImpl implements MinioService {
                 .build())) {
             return stream.readAllBytes();
         } catch (Exception e) {
-            throw new IllegalStateException("MinIO download başarısız: " + e.getMessage(), e);
+            throw new IllegalStateException("MinIO download failed: " + e.getMessage(), e);
         }
     }
 
