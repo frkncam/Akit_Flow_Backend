@@ -21,9 +21,6 @@ public class RabbitMQConfig {
     public static final String Q_CONTRACT_CREATED = "notification.contract.created";
     public static final String Q_CONTRACT_STATUS_CHANGED = "notification.contract.status.changed";
     public static final String Q_CONTRACT_EXPIRING_SOON = "notification.contract.expiring.soon";
-    public static final String Q_CONTRACT_SIGNATURE_REQUESTED = "notification.contract.signature.requested";
-    public static final String Q_CONTRACT_SIGNED = "notification.contract.signed";
-    public static final String Q_CONTRACT_SIGNATURE_REJECTED = "notification.contract.signature.rejected";
     public static final String Q_SIGNATURE_REQUESTED = "notification.signature.requested";
     public static final String Q_SIGNATURE_BATCH_COMPLETED = "notification.signature.batch.completed";
     public static final String Q_SIGNATURE_BATCH_REJECTED = "notification.signature.batch.rejected";
@@ -100,30 +97,6 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Queue contractSignatureRequestedQueue() {
-        return QueueBuilder.durable(Q_CONTRACT_SIGNATURE_REQUESTED)
-                .withArgument("x-dead-letter-exchange", DLX)
-                .withArgument("x-dead-letter-routing-key", DLQ_ROUTING_KEY)
-                .build();
-    }
-
-    @Bean
-    public Queue contractSignedQueue() {
-        return QueueBuilder.durable(Q_CONTRACT_SIGNED)
-                .withArgument("x-dead-letter-exchange", DLX)
-                .withArgument("x-dead-letter-routing-key", DLQ_ROUTING_KEY)
-                .build();
-    }
-
-    @Bean
-    public Queue contractSignatureRejectedQueue() {
-        return QueueBuilder.durable(Q_CONTRACT_SIGNATURE_REJECTED)
-                .withArgument("x-dead-letter-exchange", DLX)
-                .withArgument("x-dead-letter-routing-key", DLQ_ROUTING_KEY)
-                .build();
-    }
-
-    @Bean
     public Queue signatureRequestedQueue() {
         return QueueBuilder.durable(Q_SIGNATURE_REQUESTED)
                 .withArgument("x-dead-letter-exchange", DLX)
@@ -180,21 +153,6 @@ public class RabbitMQConfig {
     @Bean
     public Binding bindContractExpiringSoon(Queue contractExpiringSoonQueue, TopicExchange contractExchange) {
         return BindingBuilder.bind(contractExpiringSoonQueue).to(contractExchange).with("contract.expiring.soon");
-    }
-
-    @Bean
-    public Binding bindContractSignatureRequested(Queue contractSignatureRequestedQueue, TopicExchange contractExchange) {
-        return BindingBuilder.bind(contractSignatureRequestedQueue).to(contractExchange).with("contract.signature.requested");
-    }
-
-    @Bean
-    public Binding bindContractSigned(Queue contractSignedQueue, TopicExchange contractExchange) {
-        return BindingBuilder.bind(contractSignedQueue).to(contractExchange).with("contract.signed");
-    }
-
-    @Bean
-    public Binding bindContractSignatureRejected(Queue contractSignatureRejectedQueue, TopicExchange contractExchange) {
-        return BindingBuilder.bind(contractSignatureRejectedQueue).to(contractExchange).with("contract.signature.rejected");
     }
 
     @Bean

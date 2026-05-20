@@ -8,9 +8,9 @@ import com.akitflow.common.event.DomainEvent;
 import com.akitflow.common.event.payload.UserInvitedPayload;
 import com.akitflow.common.event.payload.UserJoinedPayload;
 import com.akitflow.common.event.payload.UserRegisteredPayload;
+import com.akitflow.common.messaging.TransactionAwareEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -22,7 +22,7 @@ public class AuthEventPublisher {
     private static final String USER_INVITED = "user.invited";
     private static final String USER_JOINED = "user.joined";
 
-    private final RabbitTemplate rabbitTemplate;
+    private final TransactionAwareEventPublisher txPublisher;
     private final AppProperties appProperties;
 
     public void publishUserRegistered(User user) {
@@ -62,11 +62,6 @@ public class AuthEventPublisher {
 
     private <T> void publish(String routingKey, Long organizationId, Long actorId, T payload) {
         DomainEvent<T> event = DomainEvent.of(routingKey, organizationId, actorId, payload);
-        try {
-            rabbitTemplate.convertAndSend(RabbitMQConfig.AUTH_EXCHANGE, routingKey, event);
-        } catch (Exception e) {
-            log.error("Event publish hatası — routingKey={}, eventId={}",
-                    routingKey, event.eventId(), e);
-        }
+        txPublisher.publish(RabbitMQConfig.AUTH_EXCHANGE, routingKey, event);
     }
 }

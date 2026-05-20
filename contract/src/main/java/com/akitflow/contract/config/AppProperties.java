@@ -4,7 +4,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "app")
 public record AppProperties(
-        Minio minio
+        Minio minio,
+        Scheduler scheduler
 ) {
     public record Minio(
             String url,
@@ -12,5 +13,10 @@ public record AppProperties(
             String secretKey,
             String bucket,
             int presignedUrlExpiryMinutes
+    ) {}
+
+    public record Scheduler(
+            String contractExpiringCron,
+            String contractExpiringZone
     ) {}
 }

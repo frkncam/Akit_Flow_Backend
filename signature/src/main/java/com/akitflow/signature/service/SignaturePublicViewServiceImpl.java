@@ -7,6 +7,7 @@ import com.akitflow.signature.exception.SignatureExpiredException;
 import com.akitflow.signature.mapper.SignatureMapper;
 import com.akitflow.signature.repository.SignatureRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +16,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SignaturePublicViewServiceImpl implements SignaturePublicViewService {
 
     private final SignatureRepository signatureRepository;

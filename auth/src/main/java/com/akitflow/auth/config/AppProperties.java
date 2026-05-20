@@ -4,6 +4,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "app")
 public record AppProperties(
-        String inviteBaseUrl
+        String inviteBaseUrl,
+        Invite invite
 ) {
+    public record Invite(int tokenValidityHours) {}
 }

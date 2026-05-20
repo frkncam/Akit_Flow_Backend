@@ -47,3 +47,5 @@ auth:
 
 app:
   invite-base-url: https://app.akitflow.com/invite/accept
+  invite:
+    token-validity-hours: 72

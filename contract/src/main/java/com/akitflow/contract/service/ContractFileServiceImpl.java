@@ -9,6 +9,7 @@ import com.akitflow.contract.repository.ContractFileRepository;
 import com.akitflow.contract.repository.ContractRepository;
 import com.akitflow.common.security.HeaderPrincipal;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,6 +19,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ContractFileServiceImpl implements ContractFileService {
 
     private final ContractRepository contractRepository;
@@ -59,6 +61,8 @@ public class ContractFileServiceImpl implements ContractFileService {
                 .uploadedBy(userId)
                 .build();
         entity = fileRepository.save(entity);
+
+        log.info("File uploaded: contractId={}, fileName={}, version={}", contractId, file.getOriginalFilename(), nextVersion);
 
         return withDownloadUrl(entity);
     }

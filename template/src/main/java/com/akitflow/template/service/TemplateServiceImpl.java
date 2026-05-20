@@ -14,6 +14,7 @@ import com.akitflow.template.mapper.TemplateMapper;
 import com.akitflow.template.repository.TemplateRepository;
 import com.akitflow.common.security.HeaderPrincipal;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TemplateServiceImpl implements TemplateService {
 
     private final TemplateRepository repository;
@@ -41,7 +43,9 @@ public class TemplateServiceImpl implements TemplateService {
         } else {
             entity.setVariables(new ArrayList<>());
         }
-        return mapper.toDto(repository.save(entity));
+        Template saved = repository.save(entity);
+        log.info("Template created: id={}, orgId={}", saved.getId(), saved.getOrganizationId());
+        return mapper.toDto(saved);
     }
 
     @Override

@@ -48,6 +48,9 @@ app:
     secret-key: minioadmin
     bucket: akitflow-contracts
     presigned-url-expiry-minutes: 10
+  scheduler:
+    contract-expiring-cron: "0 0 9 * * *"
+    contract-expiring-zone: Europe/Istanbul
 
 logging:
   level:
