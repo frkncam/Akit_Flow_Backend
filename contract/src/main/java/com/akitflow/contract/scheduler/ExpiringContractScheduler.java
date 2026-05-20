@@ -1,5 +1,6 @@
 package com.akitflow.contract.scheduler;
 
+import com.akitflow.contract.config.AppProperties;
 import com.akitflow.contract.domain.Contract;
 import com.akitflow.common.event.payload.ContractExpiringSoonPayload;
 import com.akitflow.contract.event.publisher.ContractEventPublisher;
@@ -16,31 +17,22 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-/**
- * Daily cron job that scans ACTIVE contracts with an endDate within the
- * next 30 days. For each contract, emits a contract.expiring.soon event
- * at the closest unnotified threshold (1d, 7d, or 30d).
- *
- * Idempotency: per-contract notified_*_at timestamps ensure each threshold
- * fires only once. If the job is missed for a day and the contract crosses
- * a threshold, the next run will catch it (threshold is "≤ N days", not
- * "exactly N days").
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class ExpiringContractScheduler {
 
-    private static final int[] THRESHOLDS_ASC = { 1, 7, 30 };  // closest first
-    private static final ZoneId TZ = ZoneId.of("Europe/Istanbul");
+    private static final int[] THRESHOLDS_ASC = { 1, 7, 30 };
 
     private final ContractRepository contractRepository;
     private final ContractEventPublisher eventPublisher;
+    private final AppProperties props;
 
-    @Scheduled(cron = "0 0 9 * * *", zone = "Europe/Istanbul")
+    @Scheduled(cron = "${app.scheduler.contract-expiring-cron}",
+               zone = "${app.scheduler.contract-expiring-zone}")
     @Transactional
     public void notifyExpiring() {
-        LocalDate today = LocalDate.now(TZ);
+        LocalDate today = LocalDate.now(ZoneId.of(props.scheduler().contractExpiringZone()));
         LocalDate horizon = today.plusDays(30);
 
         List<Contract> expiring = contractRepository.findExpiringActive(today, horizon);

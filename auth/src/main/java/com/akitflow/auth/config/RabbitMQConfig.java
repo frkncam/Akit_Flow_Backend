@@ -1,6 +1,7 @@
 package com.akitflow.auth.config;
 
 import com.akitflow.common.messaging.CommonRabbitConfig;
+import com.akitflow.common.messaging.TransactionAwareEventPublisher;
 import org.springframework.amqp.core.ExchangeBuilder;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -10,7 +11,7 @@ import org.springframework.context.annotation.Import;
 
 @Configuration
 @EnableConfigurationProperties(AppProperties.class)
-@Import(CommonRabbitConfig.class)
+@Import({CommonRabbitConfig.class, TransactionAwareEventPublisher.class})
 public class RabbitMQConfig {
 
     public static final String AUTH_EXCHANGE = "auth.exchange";

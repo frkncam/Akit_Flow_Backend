@@ -1,6 +1,7 @@
 package com.akitflow.contract.config;
 
 import com.akitflow.common.messaging.CommonRabbitConfig;
+import com.akitflow.common.messaging.TransactionAwareEventPublisher;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.ExchangeBuilder;
@@ -12,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 @Configuration
-@Import(CommonRabbitConfig.class)
+@Import({CommonRabbitConfig.class, TransactionAwareEventPublisher.class})
 public class RabbitMQConfig {
 
     public static final String CONTRACT_EXCHANGE = "contract.exchange";

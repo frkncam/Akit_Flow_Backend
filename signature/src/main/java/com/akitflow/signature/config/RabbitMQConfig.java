@@ -1,6 +1,7 @@
 package com.akitflow.signature.config;
 
 import com.akitflow.common.messaging.CommonRabbitConfig;
+import com.akitflow.common.messaging.TransactionAwareEventPublisher;
 import org.springframework.amqp.core.ExchangeBuilder;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.context.annotation.Bean;
@@ -8,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 @Configuration
-@Import(CommonRabbitConfig.class)
+@Import({CommonRabbitConfig.class, TransactionAwareEventPublisher.class})
 public class RabbitMQConfig {
 
     public static final String SIGNATURE_EXCHANGE = "signature.exchange";

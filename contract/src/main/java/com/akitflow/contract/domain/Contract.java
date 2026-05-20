@@ -10,11 +10,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(schema = "contract_schema", name = "contracts")
@@ -46,8 +49,9 @@ public class Contract {
     @Column(nullable = false, length = 32)
     private ContractStatus status;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
-    private String parties;   // JSON serialized List<Party> — handled in service
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(nullable = false, columnDefinition = "jsonb")
+    private List<Party> parties;
 
     @Column(name = "start_date")
     private LocalDate startDate;

@@ -1,5 +1,6 @@
 package com.akitflow.auth.service;
 
+import com.akitflow.auth.config.AppProperties;
 import com.akitflow.auth.config.JwtProperties;
 import com.akitflow.auth.domain.InviteToken;
 import com.akitflow.auth.domain.RefreshToken;
@@ -29,8 +30,6 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class InviteServiceImpl implements InviteService {
 
-    private static final long INVITE_EXPIRY_SECONDS = 72 * 60 * 60; // 72 saat
-
     private final InviteTokenRepository inviteTokenRepository;
     private final UserRepository userRepository;
     private final OrganizationRepository organizationRepository;
@@ -40,6 +39,7 @@ public class InviteServiceImpl implements InviteService {
     private final JwtProperties jwtProperties;
     private final UserMapper userMapper;
     private final AuthEventPublisher eventPublisher;
+    private final AppProperties appProperties;
 
     @Override
     @Transactional
@@ -65,7 +65,7 @@ public class InviteServiceImpl implements InviteService {
                         .email(request.getEmail())
                         .role(request.getRole())
                         .tokenHash(jwtService.hashToken(rawToken))
-                        .expiresAt(Instant.now().plusSeconds(INVITE_EXPIRY_SECONDS))
+                        .expiresAt(Instant.now().plusSeconds(appProperties.invite().tokenValidityHours() * 3600L))
                         .build()
         );
 

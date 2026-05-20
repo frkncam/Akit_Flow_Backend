@@ -13,6 +13,7 @@ import com.akitflow.contract.repository.ContractFileRepository;
 import com.akitflow.contract.repository.ContractRepository;
 import com.akitflow.common.security.HeaderPrincipal;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,7 @@ import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ContractPdfServiceImpl implements ContractPdfService {
 
     private static final Pattern PLACEHOLDER = Pattern.compile("\\{\\{\\s*([a-z][a-z0-9_]*)\\s*\\}\\}");
@@ -36,7 +38,6 @@ public class ContractPdfServiceImpl implements ContractPdfService {
     private final ContractFileRepository fileRepository;
     private final ContractFileMapper fileMapper;
     private final PdfRenderingService pdfRenderingService;
-    private final PartyJsonService partyJsonService;
     private final MinioService minioService;
     private final TemplateClient templateClient;
 
@@ -81,6 +82,8 @@ public class ContractPdfServiceImpl implements ContractPdfService {
         String fileName = safeTpl + ".pdf";
 
         minioService.upload(storageKey, new ByteArrayInputStream(pdf), pdf.length, "application/pdf");
+
+        log.info("PDF generated: contractId={}, templateId={}", contractId, templateId);
 
         ContractFile saved = fileRepository.save(ContractFile.builder()
                 .contract(contract)
@@ -136,7 +139,7 @@ public class ContractPdfServiceImpl implements ContractPdfService {
         v.put("description", c.getDescription());
         v.put("contractType", c.getContractType());
         v.put("status", c.getStatus());
-        v.put("parties", partyJsonService.deserialize(c.getParties()));
+        v.put("parties", c.getParties());
         v.put("startDate", c.getStartDate());
         v.put("endDate", c.getEndDate());
         v.put("signedAt", c.getSignedAt());

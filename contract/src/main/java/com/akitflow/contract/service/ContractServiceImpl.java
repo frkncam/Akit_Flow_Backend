@@ -23,6 +23,7 @@ import com.akitflow.contract.mapper.ContractMapper;
 import com.akitflow.contract.repository.ContractFileRepository;
 import com.akitflow.contract.repository.ContractRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -33,12 +34,12 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ContractServiceImpl implements ContractService {
 
     private final ContractRepository contractRepository;
     private final ContractFileRepository contractFileRepository;
     private final ContractMapper contractMapper;
-    private final PartyJsonService partyJsonService;
     private final ContractEventPublisher eventPublisher;
     private final MinioService minioService;
     private final SignatureClient signatureClient;
@@ -56,13 +57,15 @@ public class ContractServiceImpl implements ContractService {
         contract.setStatus(ContractStatus.DRAFT);
 
         List<Party> partyDomainList = contractMapper.partyRequestListToDomain(request.parties());
-        contract.setParties(partyJsonService.serialize(partyDomainList));
+        contract.setParties(partyDomainList);
 
         if (contract.getCurrency() == null) {
             contract.setCurrency("TRY");
         }
 
         contract = contractRepository.save(contract);
+
+        log.info("Contract created: id={}, orgId={}", contract.getId(), orgId);
 
         eventPublisher.publishContractCreated(orgId, userId, new ContractCreatedPayload(
                 contract.getId(),
@@ -96,7 +99,7 @@ public class ContractServiceImpl implements ContractService {
 
         if (request.parties() != null) {
             List<Party> partyDomainList = contractMapper.partyRequestListToDomain(request.parties());
-            contract.setParties(partyJsonService.serialize(partyDomainList));
+            contract.setParties(partyDomainList);
         }
 
         return toResponse(contractRepository.save(contract));
@@ -194,7 +197,7 @@ public class ContractServiceImpl implements ContractService {
 
     private ContractResponse toResponse(Contract c) {
         ContractResponse base = contractMapper.toResponse(c);
-        List<Party> partyDomain = partyJsonService.deserialize(c.getParties());
+        List<Party> partyDomain = c.getParties();
         return new ContractResponse(
                 base.id(),
                 base.organizationId(),
