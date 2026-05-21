@@ -214,7 +214,8 @@ public class ContractServiceImpl implements ContractService {
                 base.currency(),
                 base.createdBy(),
                 base.createdAt(),
-                base.updatedAt()
+                base.updatedAt(),
+                c.getWorkflowState()
         );
     }
 }

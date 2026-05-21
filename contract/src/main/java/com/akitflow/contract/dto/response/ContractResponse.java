@@ -24,5 +24,6 @@ public record ContractResponse(
         String currency,
         Long createdBy,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        String workflowState
 ) {}
