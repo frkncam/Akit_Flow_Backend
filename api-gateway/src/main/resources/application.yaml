@@ -26,6 +26,10 @@
           uri: lb://notification-service
           predicates:
             - Path=/api/v1/notifications/**
+        - id: audit-route
+          uri: lb://audit-service
+          predicates:
+            - Path=/api/v1/audit/**
         # OpenAPI aggregation routes — gateway swagger-ui dropdown'a göre downstream'lere proxy
         - id: auth-api-docs
           uri: lb://auth-service
@@ -55,6 +59,12 @@
           uri: lb://notification-service
           predicates:
             - Path=/v3/api-docs/notification
+          filters:
+            - SetPath=/v3/api-docs
+        - id: audit-api-docs
+          uri: lb://audit-service
+          predicates:
+            - Path=/v3/api-docs/audit
           filters:
             - SetPath=/v3/api-docs
       globalcors:
@@ -118,6 +128,8 @@ springdoc:
         url: /v3/api-docs/signature
       - name: Notification Service
         url: /v3/api-docs/notification
+      - name: Audit Service
+        url: /v3/api-docs/audit
     operations-sorter: alpha
     tags-sorter: alpha
     disable-swagger-default-url: true   # Boş gateway api-docs'u dropdown'a koymasın
