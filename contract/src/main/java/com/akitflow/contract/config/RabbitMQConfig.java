@@ -18,6 +18,7 @@ public class RabbitMQConfig {
 
     public static final String CONTRACT_EXCHANGE = "contract.exchange";
     public static final String SIGNATURE_EXCHANGE = "signature.exchange";
+    public static final String WORKFLOW_EXCHANGE = "workflow.exchange";
 
     public static final String RK_CONTRACT_CREATED         = "contract.created";
     public static final String RK_CONTRACT_STATUS_CHANGED  = "contract.status.changed";
@@ -25,6 +26,7 @@ public class RabbitMQConfig {
 
     public static final String Q_SIGNATURE_BATCH_COMPLETED = "contract.signature.batch.completed";
     public static final String Q_SIGNATURE_BATCH_REJECTED = "contract.signature.batch.rejected";
+    public static final String Q_CONTRACT_WORKFLOW_TRANSITIONED = "contract.workflow.transitioned";
 
     @Bean
     public TopicExchange contractExchange() {
@@ -34,6 +36,11 @@ public class RabbitMQConfig {
     @Bean
     public TopicExchange signatureExchange() {
         return ExchangeBuilder.topicExchange(SIGNATURE_EXCHANGE).durable(true).build();
+    }
+
+    @Bean
+    public TopicExchange workflowExchange() {
+        return ExchangeBuilder.topicExchange(WORKFLOW_EXCHANGE).durable(true).build();
     }
 
     @Bean
@@ -54,5 +61,15 @@ public class RabbitMQConfig {
     @Bean
     public Binding bindSignatureBatchRejected(Queue signatureBatchRejectedQueue, TopicExchange signatureExchange) {
         return BindingBuilder.bind(signatureBatchRejectedQueue).to(signatureExchange).with("signature.batch.rejected");
+    }
+
+    @Bean
+    public Queue workflowTransitionedQueue() {
+        return QueueBuilder.durable(Q_CONTRACT_WORKFLOW_TRANSITIONED).build();
+    }
+
+    @Bean
+    public Binding bindWorkflowTransitioned(Queue workflowTransitionedQueue, TopicExchange workflowExchange) {
+        return BindingBuilder.bind(workflowTransitionedQueue).to(workflowExchange).with("workflow.transitioned");
     }
 }

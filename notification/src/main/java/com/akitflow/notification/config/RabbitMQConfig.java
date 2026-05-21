@@ -13,6 +13,7 @@ public class RabbitMQConfig {
     public static final String AUTH_EXCHANGE = "auth.exchange";
     public static final String CONTRACT_EXCHANGE = "contract.exchange";
     public static final String SIGNATURE_EXCHANGE = "signature.exchange";
+    public static final String WORKFLOW_EXCHANGE = "workflow.exchange";
     public static final String DLX = "notification.dlx";
 
     public static final String Q_USER_REGISTERED = "notification.user.registered";
@@ -24,6 +25,9 @@ public class RabbitMQConfig {
     public static final String Q_SIGNATURE_REQUESTED = "notification.signature.requested";
     public static final String Q_SIGNATURE_BATCH_COMPLETED = "notification.signature.batch.completed";
     public static final String Q_SIGNATURE_BATCH_REJECTED = "notification.signature.batch.rejected";
+    public static final String Q_WORKFLOW_APPROVAL_REQUESTED = "notification.workflow.approval.requested";
+    public static final String Q_WORKFLOW_APPROVAL_REJECTED = "notification.workflow.approval.rejected";
+    public static final String Q_WORKFLOW_APPROVED = "notification.workflow.approved";
     public static final String Q_DLQ = "notification.dlq";
 
     private static final String DLQ_ROUTING_KEY = "dlq";
@@ -41,6 +45,11 @@ public class RabbitMQConfig {
     @Bean
     public TopicExchange signatureExchange() {
         return ExchangeBuilder.topicExchange(SIGNATURE_EXCHANGE).durable(true).build();
+    }
+
+    @Bean
+    public TopicExchange workflowExchange() {
+        return ExchangeBuilder.topicExchange(WORKFLOW_EXCHANGE).durable(true).build();
     }
 
     @Bean
@@ -121,6 +130,30 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue workflowApprovalRequestedQueue() {
+        return QueueBuilder.durable(Q_WORKFLOW_APPROVAL_REQUESTED)
+                .withArgument("x-dead-letter-exchange", DLX)
+                .withArgument("x-dead-letter-routing-key", DLQ_ROUTING_KEY)
+                .build();
+    }
+
+    @Bean
+    public Queue workflowApprovalRejectedQueue() {
+        return QueueBuilder.durable(Q_WORKFLOW_APPROVAL_REJECTED)
+                .withArgument("x-dead-letter-exchange", DLX)
+                .withArgument("x-dead-letter-routing-key", DLQ_ROUTING_KEY)
+                .build();
+    }
+
+    @Bean
+    public Queue workflowApprovedQueue() {
+        return QueueBuilder.durable(Q_WORKFLOW_APPROVED)
+                .withArgument("x-dead-letter-exchange", DLX)
+                .withArgument("x-dead-letter-routing-key", DLQ_ROUTING_KEY)
+                .build();
+    }
+
+    @Bean
     public Queue deadLetterQueue() {
         return QueueBuilder.durable(Q_DLQ).build();
     }
@@ -168,6 +201,21 @@ public class RabbitMQConfig {
     @Bean
     public Binding bindSignatureBatchRejected(Queue signatureBatchRejectedQueue, TopicExchange signatureExchange) {
         return BindingBuilder.bind(signatureBatchRejectedQueue).to(signatureExchange).with("signature.batch.rejected");
+    }
+
+    @Bean
+    public Binding bindWorkflowApprovalRequested(Queue workflowApprovalRequestedQueue, TopicExchange workflowExchange) {
+        return BindingBuilder.bind(workflowApprovalRequestedQueue).to(workflowExchange).with("workflow.approval.requested");
+    }
+
+    @Bean
+    public Binding bindWorkflowApprovalRejected(Queue workflowApprovalRejectedQueue, TopicExchange workflowExchange) {
+        return BindingBuilder.bind(workflowApprovalRejectedQueue).to(workflowExchange).with("workflow.approval.rejected");
+    }
+
+    @Bean
+    public Binding bindWorkflowApproved(Queue workflowApprovedQueue, TopicExchange workflowExchange) {
+        return BindingBuilder.bind(workflowApprovedQueue).to(workflowExchange).with("workflow.approved");
     }
 
     @Bean
