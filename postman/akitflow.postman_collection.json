@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "AkitFlow - Backend APIs",
-    "description": "AkitFlow tüm backend servisleri için Postman koleksiyonu. Tüm istekler api-gateway (8080) üzerinden gider. Gateway JWT'yi doğrular, X-User-Id/X-Org-Id header'larını downstream servislere geçirir. Servisler: auth(8081), notification(8082), contract(8083), template(8086), signature(8087).",
+    "description": "AkitFlow tüm backend servisleri için Postman koleksiyonu. Tüm istekler api-gateway (8080) üzerinden gider. Gateway JWT'yi doğrular, X-User-Id/X-Org-Id header'larını downstream servislere geçirir. Servisler: auth(8081), notification(8082), contract(8083), template(8086), signature(8087), workflow(8088), audit(8089).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_postman_id": "a1b2c3d4-akitflow-backend-0002"
   },
@@ -19,7 +19,11 @@
     { "key": "contractId", "value": "", "type": "string" },
     { "key": "fileId", "value": "", "type": "string" },
     { "key": "templateId", "value": "", "type": "string" },
-    { "key": "signatureToken", "value": "", "type": "string", "description": "Mailpit üzerinden signer link'inden manuel kopyalanır" }
+    { "key": "signatureToken", "value": "", "type": "string", "description": "Mailpit üzerinden signer link'inden manuel kopyalanır" },
+    { "key": "workflowDirectUrl", "value": "http://localhost:8088", "type": "string", "description": "Workflow servise direkt erişim (debug)" },
+    { "key": "stepId", "value": "", "type": "string" },
+    { "key": "auditDirectUrl", "value": "http://localhost:8089", "type": "string", "description": "Audit servise direkt erişim (debug)" },
+    { "key": "auditEventId", "value": "", "type": "string", "description": "Search Audit Events çağrısından otomatik set edilir" }
   ],
   "auth": {
     "type": "bearer",
@@ -691,6 +695,209 @@
             "method": "GET",
             "header": [],
             "url": { "raw": "{{baseUrl}}/api/v1/notifications/emails/1", "host": ["{{baseUrl}}"], "path": ["api","v1","notifications","emails","1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Workflow",
+      "description": "Workflow servisi (port 8088) — sözleşme onay akışları. Bir sözleşme için onay süreci başlatır, onay adımlarını yönetir.",
+      "item": [
+        {
+          "name": "Start Workflow",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workflows/contracts/{{contractId}}/start",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","workflows","contracts","{{contractId}}","start"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approvers\": [\n    {\n      \"approverUserId\": 2,\n      \"approverName\": \"Ahmet Yılmaz\",\n      \"approverEmail\": \"ahmet@demirhukuk.com\"\n    },\n    {\n      \"approverUserId\": 3,\n      \"approverName\": \"Mehmet Kaya\",\n      \"approverEmail\": \"mehmet@demirhukuk.com\"\n    }\n  ]\n}"
+            },
+            "description": "Belirtilen sözleşme için sıralı onay akışı başlatır. Her approver bir adıma karşılık gelir; adımlar listedeki sırayla işlenir."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.steps && j.steps.length > 0) {",
+                  "    pm.collectionVariables.set('stepId', j.steps[0].id);",
+                  "    pm.test('stepId set', () => pm.expect(j.steps[0].id).to.be.a('number'));",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Workflow",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workflows/contracts/{{contractId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","workflows","contracts","{{contractId}}"]
+            },
+            "description": "Belirtilen sözleşmenin aktif workflow'unu ve tüm onay adımlarını getirir."
+          }
+        },
+        {
+          "name": "Approve Step",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workflows/steps/{{stepId}}/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","workflows","steps","{{stepId}}","approve"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": \"Sözleşme incelendi, onaylandı.\"\n}"
+            },
+            "description": "Belirtilen onay adımını onaylar. Yorum isteğe bağlıdır. Tüm adımlar onaylanırsa workflow APPROVED durumuna geçer."
+          }
+        },
+        {
+          "name": "Reject Step",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workflows/steps/{{stepId}}/reject",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","workflows","steps","{{stepId}}","reject"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": \"Madde 5 üzerinde revizyon gerekli.\"\n}"
+            },
+            "description": "Belirtilen onay adımını reddeder. Workflow REJECTED durumuna geçer ve sözleşme sahibine bildirim gönderilir."
+          }
+        },
+        {
+          "name": "Cancel Workflow",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workflows/contracts/{{contractId}}/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","workflows","contracts","{{contractId}}","cancel"]
+            },
+            "description": "Belirtilen sözleşmenin aktif workflow'unu iptal eder. Sadece workflow sahibi (başlatan kullanıcı) iptal edebilir."
+          }
+        },
+        {
+          "name": "My Pending Approvals",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workflows/my-pending-approvals",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","workflows","my-pending-approvals"]
+            },
+            "description": "Giriş yapan kullanıcıya atanmış bekleyen onay adımlarını listeler.",
+            "event": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Audit",
+      "description": "Audit servisi (port 8089) — tüm servislerden gelen domain event'lerini değişmez (append-only) audit log olarak saklar. Sadece OWNER/ADMIN rolleri erişebilir; salt-okunur sorgu endpoint'leri. Hassas alanlar (token, inviteLink) kaydedilmeden önce maskelenir.",
+      "item": [
+        {
+          "name": "Search Audit Events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/audit?page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","audit"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" },
+                { "key": "aggregateType", "value": "CONTRACT", "description": "CONTRACT | USER | WORKFLOW | SIGNATURE", "disabled": true },
+                { "key": "eventType", "value": "contract.created", "description": "Tam event tipi (routing key)", "disabled": true },
+                { "key": "from", "value": "2026-01-01T00:00:00Z", "description": "ISO-8601 başlangıç (recorded_at)", "disabled": true },
+                { "key": "to", "value": "2026-12-31T23:59:59Z", "description": "ISO-8601 bitiş (recorded_at)", "disabled": true }
+              ]
+            },
+            "description": "Organizasyona ait audit event'lerini filtreleyerek listeler. Tüm filtreler opsiyonel (kullanmak için query param'ı enable et)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.content && j.content.length > 0) {",
+                  "    pm.collectionVariables.set('auditEventId', j.content[0].eventId);",
+                  "    pm.test('auditEventId set', () => pm.expect(j.content[0].eventId).to.be.a('string'));",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Contract Audit Trail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/audit/contracts/{{contractId}}?page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","audit","contracts","{{contractId}}"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            },
+            "description": "Belirtilen sözleşmeye ait audit event'lerini (CONTRACT aggregate) recorded_at'e göre tersten listeler."
+          }
+        },
+        {
+          "name": "Get User Actions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/audit/users/1?page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","v1","audit","users","1"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" },
+                { "key": "from", "value": "2026-01-01T00:00:00Z", "description": "ISO-8601 başlangıç (recorded_at)", "disabled": true },
+                { "key": "to", "value": "2026-12-31T23:59:59Z", "description": "ISO-8601 bitiş (recorded_at)", "disabled": true }
+              ]
+            },
+            "description": "Belirtilen kullanıcının (actor) gerçekleştirdiği aksiyonları listeler. Path'teki userId'yi hedef kullanıcıyla değiştir."
+          }
+        },
+        {
+          "name": "Get Audit Event By Event Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/audit/events/{{auditEventId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","audit","events","{{auditEventId}}"] },
+            "description": "UUID event id ile tek bir audit event getirir. {{auditEventId}} 'Search Audit Events' çağrısında otomatik set edilir."
           }
         }
       ]

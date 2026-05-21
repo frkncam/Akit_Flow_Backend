@@ -248,6 +248,27 @@ services:
       eureka-server:
         condition: service_healthy
 
+  audit:
+    build:
+      context: ./audit
+      dockerfile: Dockerfile
+    container_name: akitflow-audit
+    restart: unless-stopped
+    ports:
+      - "8089:8089"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/akitflow
+      SPRING_RABBITMQ_HOST: rabbitmq
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   rabbitmq_data:
