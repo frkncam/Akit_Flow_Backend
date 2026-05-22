@@ -58,6 +58,6 @@ auth:
     refresh-token-expiry: 2592000  # 30 days (seconds)
 
 app:
-  invite-base-url: https://app.akitflow.com/invite/accept
+  invite-base-url: http://localhost:3000/invite/accept
   invite:
     token-validity-hours: 72

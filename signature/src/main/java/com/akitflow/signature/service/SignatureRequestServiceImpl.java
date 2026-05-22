@@ -35,13 +35,13 @@ public class SignatureRequestServiceImpl implements SignatureRequestService {
     private final AppProperties appProperties;
 
     @Override
-    public List<SignatureDto> sendForSignature(BatchSignatureRequest request, Long organizationId) {
-        SignatureSetup setup = prepare(request, organizationId);
+    public List<SignatureDto> sendForSignature(BatchSignatureRequest request, Long organizationId, Long actorId) {
+        SignatureSetup setup = prepare(request, organizationId, actorId);
         ProviderSignatureResult providerRes = provider.requestSignatures(setup.toProviderRequest());
         return persist(setup, providerRes);
     }
 
-    private SignatureSetup prepare(BatchSignatureRequest request, Long organizationId) {
+    private SignatureSetup prepare(BatchSignatureRequest request, Long organizationId, Long actorId) {
         byte[] pdf = minioService.download(request.fileStorageKey());
         Duration validity = Duration.ofDays(appProperties.signature().token().validityDays());
 
@@ -49,12 +49,13 @@ public class SignatureRequestServiceImpl implements SignatureRequestService {
                 .map(s -> new SignerInfo(s.name(), s.email()))
                 .toList();
 
-        return new SignatureSetup(request, organizationId, pdf, signers, validity);
+        return new SignatureSetup(request, organizationId, actorId, pdf, signers, validity);
     }
 
     private record SignatureSetup(
             BatchSignatureRequest req,
             Long organizationId,
+            Long actorId,
             byte[] pdf,
             List<SignerInfo> signers,
             Duration validity
@@ -103,7 +104,7 @@ public class SignatureRequestServiceImpl implements SignatureRequestService {
 
         for (Signature s : created) {
             eventPublisher.publishSignatureRequested(
-                    orgId, null,
+                    orgId, setup.actorId(),
                     new SignatureRequestedPayload(
                             contractId,
                             setup.req().contractTitle(),

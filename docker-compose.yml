@@ -83,191 +83,191 @@ services:
       mc mb -p local/akitflow-contracts || true;
       echo 'MinIO bootstrap complete';
       "
-
-  eureka-server:
-    build:
-      context: ./eureka-server
-      dockerfile: Dockerfile
-    container_name: akitflow-eureka-server
-    restart: unless-stopped
-    ports:
-      - "8761:8761"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8761/actuator/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-
-  api-gateway:
-    build:
-      context: ./api-gateway
-      dockerfile: Dockerfile
-    container_name: akitflow-api-gateway
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth:8081/oauth2/jwks
-    depends_on:
-      eureka-server:
-        condition: service_healthy
-
-  auth:
-    build:
-      context: ./auth
-      dockerfile: Dockerfile
-    container_name: akitflow-auth
-    restart: unless-stopped
-    ports:
-      - "8081:8081"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/akitflow
-      SPRING_RABBITMQ_HOST: rabbitmq
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-
-  contract:
-    build:
-      context: ./contract
-      dockerfile: Dockerfile
-    container_name: akitflow-contract
-    restart: unless-stopped
-    ports:
-      - "8083:8083"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/akitflow
-      SPRING_RABBITMQ_HOST: rabbitmq
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      APP_MINIO_URL: http://minio:9000
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-      minio-bootstrap:
-        condition: service_completed_successfully
-      eureka-server:
-        condition: service_healthy
-
-  notification:
-    build:
-      context: ./notification
-      dockerfile: Dockerfile
-    container_name: akitflow-notification
-    restart: unless-stopped
-    ports:
-      - "8082:8082"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/akitflow
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_MAIL_HOST: mailpit
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-
-  template:
-    build:
-      context: ./template
-      dockerfile: Dockerfile
-    container_name: akitflow-template
-    restart: unless-stopped
-    ports:
-      - "8086:8086"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/akitflow
-      SPRING_RABBITMQ_HOST: rabbitmq
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-
-  signature:
-    build:
-      context: ./signature
-      dockerfile: Dockerfile
-    container_name: akitflow-signature
-    restart: unless-stopped
-    ports:
-      - "8087:8087"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/akitflow
-      SPRING_RABBITMQ_HOST: rabbitmq
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      APP_MINIO_URL: http://minio:9000
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-      minio-bootstrap:
-        condition: service_completed_successfully
-      eureka-server:
-        condition: service_healthy
-
-  workflow:
-    build:
-      context: ./workflow
-      dockerfile: Dockerfile
-    container_name: akitflow-workflow
-    restart: unless-stopped
-    ports:
-      - "8088:8088"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/akitflow
-      SPRING_RABBITMQ_HOST: rabbitmq
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
-
-  audit:
-    build:
-      context: ./audit
-      dockerfile: Dockerfile
-    container_name: akitflow-audit
-    restart: unless-stopped
-    ports:
-      - "8089:8089"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/akitflow
-      SPRING_RABBITMQ_HOST: rabbitmq
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-      eureka-server:
-        condition: service_healthy
+#
+#  eureka-server:
+#    build:
+#      context: ./eureka-server
+#      dockerfile: Dockerfile
+#    container_name: akitflow-eureka-server
+#    restart: unless-stopped
+#    ports:
+#      - "8761:8761"
+#    healthcheck:
+#      test: ["CMD", "wget", "-qO-", "http://localhost:8761/actuator/health"]
+#      interval: 15s
+#      timeout: 5s
+#      retries: 10
+#      start_period: 30s
+#
+#  api-gateway:
+#    build:
+#      context: ./api-gateway
+#      dockerfile: Dockerfile
+#    container_name: akitflow-api-gateway
+#    restart: unless-stopped
+#    ports:
+#      - "8080:8080"
+#    environment:
+#      SPRING_PROFILES_ACTIVE: docker
+#      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+#      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth:8081/oauth2/jwks
+#    depends_on:
+#      eureka-server:
+#        condition: service_healthy
+#
+#  auth:
+#    build:
+#      context: ./auth
+#      dockerfile: Dockerfile
+#    container_name: akitflow-auth
+#    restart: unless-stopped
+#    ports:
+#      - "8081:8081"
+#    environment:
+#      SPRING_PROFILES_ACTIVE: docker
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/akitflow
+#      SPRING_RABBITMQ_HOST: rabbitmq
+#      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      rabbitmq:
+#        condition: service_healthy
+#      eureka-server:
+#        condition: service_healthy
+#
+#  contract:
+#    build:
+#      context: ./contract
+#      dockerfile: Dockerfile
+#    container_name: akitflow-contract
+#    restart: unless-stopped
+#    ports:
+#      - "8083:8083"
+#    environment:
+#      SPRING_PROFILES_ACTIVE: docker
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/akitflow
+#      SPRING_RABBITMQ_HOST: rabbitmq
+#      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+#      APP_MINIO_URL: http://minio:9000
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      rabbitmq:
+#        condition: service_healthy
+#      minio-bootstrap:
+#        condition: service_completed_successfully
+#      eureka-server:
+#        condition: service_healthy
+#
+#  notification:
+#    build:
+#      context: ./notification
+#      dockerfile: Dockerfile
+#    container_name: akitflow-notification
+#    restart: unless-stopped
+#    ports:
+#      - "8082:8082"
+#    environment:
+#      SPRING_PROFILES_ACTIVE: docker
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/akitflow
+#      SPRING_RABBITMQ_HOST: rabbitmq
+#      SPRING_MAIL_HOST: mailpit
+#      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      rabbitmq:
+#        condition: service_healthy
+#      eureka-server:
+#        condition: service_healthy
+#
+#  template:
+#    build:
+#      context: ./template
+#      dockerfile: Dockerfile
+#    container_name: akitflow-template
+#    restart: unless-stopped
+#    ports:
+#      - "8086:8086"
+#    environment:
+#      SPRING_PROFILES_ACTIVE: docker
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/akitflow
+#      SPRING_RABBITMQ_HOST: rabbitmq
+#      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      rabbitmq:
+#        condition: service_healthy
+#      eureka-server:
+#        condition: service_healthy
+#
+#  signature:
+#    build:
+#      context: ./signature
+#      dockerfile: Dockerfile
+#    container_name: akitflow-signature
+#    restart: unless-stopped
+#    ports:
+#      - "8087:8087"
+#    environment:
+#      SPRING_PROFILES_ACTIVE: docker
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/akitflow
+#      SPRING_RABBITMQ_HOST: rabbitmq
+#      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+#      APP_MINIO_URL: http://minio:9000
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      rabbitmq:
+#        condition: service_healthy
+#      minio-bootstrap:
+#        condition: service_completed_successfully
+#      eureka-server:
+#        condition: service_healthy
+#
+#  workflow:
+#    build:
+#      context: ./workflow
+#      dockerfile: Dockerfile
+#    container_name: akitflow-workflow
+#    restart: unless-stopped
+#    ports:
+#      - "8088:8088"
+#    environment:
+#      SPRING_PROFILES_ACTIVE: docker
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/akitflow
+#      SPRING_RABBITMQ_HOST: rabbitmq
+#      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      rabbitmq:
+#        condition: service_healthy
+#      eureka-server:
+#        condition: service_healthy
+#
+#  audit:
+#    build:
+#      context: ./audit
+#      dockerfile: Dockerfile
+#    container_name: akitflow-audit
+#    restart: unless-stopped
+#    ports:
+#      - "8089:8089"
+#    environment:
+#      SPRING_PROFILES_ACTIVE: docker
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/akitflow
+#      SPRING_RABBITMQ_HOST: rabbitmq
+#      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      rabbitmq:
+#        condition: service_healthy
+#      eureka-server:
+#        condition: service_healthy
 
 volumes:
   postgres_data:

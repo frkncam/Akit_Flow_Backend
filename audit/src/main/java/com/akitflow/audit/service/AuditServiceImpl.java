@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -84,7 +85,13 @@ public class AuditServiceImpl implements AuditService {
     @Override
     @Transactional(readOnly = true)
     public Page<AuditEvent> getUserActions(Long organizationId, Long userId, Instant from, Instant to, Pageable pageable) {
-        return repository.findByActor(organizationId, userId, from, to, pageable);
+        Specification<AuditEvent> spec = (r, q, cb) -> cb.equal(r.get("organizationId"), organizationId);
+        spec = spec.and((r, q, cb) -> cb.equal(r.get("actorId"), userId));
+        if (from != null)
+            spec = spec.and((r, q, cb) -> cb.greaterThanOrEqualTo(r.get("recordedAt"), from));
+        if (to != null)
+            spec = spec.and((r, q, cb) -> cb.lessThanOrEqualTo(r.get("recordedAt"), to));
+        return repository.findAll(spec, pageable);
     }
 
     @Override
@@ -98,6 +105,15 @@ public class AuditServiceImpl implements AuditService {
     @Transactional(readOnly = true)
     public Page<AuditEvent> search(Long organizationId, AggregateType aggregateType,
                                    String eventType, Instant from, Instant to, Pageable pageable) {
-        return repository.search(organizationId, aggregateType, eventType, from, to, pageable);
+        Specification<AuditEvent> spec = (r, q, cb) -> cb.equal(r.get("organizationId"), organizationId);
+        if (aggregateType != null)
+            spec = spec.and((r, q, cb) -> cb.equal(r.get("aggregateType"), aggregateType));
+        if (eventType != null)
+            spec = spec.and((r, q, cb) -> cb.equal(r.get("eventType"), eventType));
+        if (from != null)
+            spec = spec.and((r, q, cb) -> cb.greaterThanOrEqualTo(r.get("recordedAt"), from));
+        if (to != null)
+            spec = spec.and((r, q, cb) -> cb.lessThanOrEqualTo(r.get("recordedAt"), to));
+        return repository.findAll(spec, pageable);
     }
 }

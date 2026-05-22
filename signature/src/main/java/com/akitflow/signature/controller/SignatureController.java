@@ -28,7 +28,7 @@ public class SignatureController {
     @PostMapping("/batch")
     public List<SignatureDto> sendForSignature(@Valid @RequestBody BatchSignatureRequest request,
                                                 @AuthenticationPrincipal HeaderPrincipal user) {
-        return requestService.sendForSignature(request, user.organizationId());
+        return requestService.sendForSignature(request, user.organizationId(), user.userId());
     }
 
     @GetMapping("/contracts/{contractId}")

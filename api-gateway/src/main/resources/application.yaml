@@ -30,6 +30,10 @@
           uri: lb://audit-service
           predicates:
             - Path=/api/v1/audit/**
+        - id: workflow-route
+          uri: lb://workflow-service
+          predicates:
+            - Path=/api/v1/workflows/**
         # OpenAPI aggregation routes — gateway swagger-ui dropdown'a göre downstream'lere proxy
         - id: auth-api-docs
           uri: lb://auth-service
@@ -65,6 +69,12 @@
           uri: lb://audit-service
           predicates:
             - Path=/v3/api-docs/audit
+          filters:
+            - SetPath=/v3/api-docs
+        - id: workflow-api-docs
+          uri: lb://workflow-service
+          predicates:
+            - Path=/v3/api-docs/workflow
           filters:
             - SetPath=/v3/api-docs
       globalcors:
@@ -130,6 +140,8 @@ springdoc:
         url: /v3/api-docs/notification
       - name: Audit Service
         url: /v3/api-docs/audit
+      - name: Workflow Service
+        url: /v3/api-docs/workflow
     operations-sorter: alpha
     tags-sorter: alpha
     disable-swagger-default-url: true   # Boş gateway api-docs'u dropdown'a koymasın

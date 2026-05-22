@@ -17,7 +17,7 @@ public record DomainEvent<T>(
         Objects.requireNonNull(eventType, "eventType must not be null");
         Objects.requireNonNull(occurredAt, "occurredAt must not be null");
         Objects.requireNonNull(organizationId, "organizationId must not be null");
-        Objects.requireNonNull(actorId, "actorId must not be null");
+        // actorId may be null for system-generated events (e.g. public signing callbacks)
         Objects.requireNonNull(payload, "payload must not be null");
     }
 

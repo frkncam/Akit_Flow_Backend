@@ -77,5 +77,5 @@ app:
   mail:
     from: noreply@akitflow.com
     from-name: AkitFlow
-  app-base-url: https://app.akitflow.com
+  app-base-url: http://localhost:3000
   sign-base-url: http://localhost:3000/sign
