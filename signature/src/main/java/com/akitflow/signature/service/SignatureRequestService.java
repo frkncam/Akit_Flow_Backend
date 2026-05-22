@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface SignatureRequestService {
 
-    List<SignatureDto> sendForSignature(BatchSignatureRequest request, Long organizationId);
+    List<SignatureDto> sendForSignature(BatchSignatureRequest request, Long organizationId, Long actorId);
 }

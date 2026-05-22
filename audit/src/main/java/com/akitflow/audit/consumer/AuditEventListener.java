@@ -28,6 +28,10 @@ public class AuditEventListener {
     @RabbitListener(queues = RabbitMQConfig.Q_AUDIT_EVENTS)
     public void onMessage(Message message) throws IOException {
         DomainEvent<JsonNode> event = objectMapper.readValue(message.getBody(), EVENT_TYPE);
+        if (event.actorId() == null) {
+            log.debug("Skipping audit record for system event: {}", event.eventType());
+            return;
+        }
         auditService.record(event.eventId(), event.eventType(), event.occurredAt(),
                 event.organizationId(), event.actorId(), event.payload());
     }
