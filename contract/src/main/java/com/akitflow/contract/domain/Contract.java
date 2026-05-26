@@ -86,9 +86,6 @@ public class Contract {
     @Column(name = "notified_1d_at")
     private Instant notified1dAt;
 
-    @Column(name = "workflow_state", length = 32)
-    private String workflowState;
-
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -96,6 +93,10 @@ public class Contract {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @Version
+    @Column(nullable = false)
+    private Long version;
 
     public void transitionTo(ContractStatus target) {
         if (status == target) {

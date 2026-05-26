@@ -1,8 +1,9 @@
 package com.akitflow.common.messaging;
 
+import com.akitflow.common.domain.FailedEvent;
+import com.akitflow.common.repository.FailedEventRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.retry.RetryCallback;
@@ -18,16 +19,19 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 @Slf4j
 public class TransactionAwareEventPublisher {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule());
-
     private static final int MAX_ATTEMPTS = 3;
 
     private final RabbitTemplate rabbitTemplate;
+    private final FailedEventRepository failedEventRepository;
+    private final ObjectMapper objectMapper;
     private final RetryTemplate retryTemplate;
 
-    public TransactionAwareEventPublisher(RabbitTemplate rabbitTemplate) {
+    public TransactionAwareEventPublisher(RabbitTemplate rabbitTemplate,
+                                          FailedEventRepository failedEventRepository,
+                                          ObjectMapper objectMapper) {
         this.rabbitTemplate = rabbitTemplate;
+        this.failedEventRepository = failedEventRepository;
+        this.objectMapper = objectMapper;
 
         ExponentialBackOffPolicy backOff = new ExponentialBackOffPolicy();
         backOff.setInitialInterval(1000);
@@ -68,9 +72,33 @@ public class TransactionAwareEventPublisher {
             });
         } catch (Exception exhausted) {
             String eventJson = serializeQuietly(event);
+            String eventType = event.getClass().getSimpleName();
+            String lastError = exhausted.getMessage() != null
+                    ? exhausted.getMessage().substring(0, Math.min(1024, exhausted.getMessage().length()))
+                    : "Unknown";
+
             log.error("Event publish exhausted after {} retries: exchange={} rk={} eventType={} payload={}",
-                    MAX_ATTEMPTS, exchange, routingKey,
-                    event.getClass().getSimpleName(), eventJson, exhausted);
+                    MAX_ATTEMPTS, exchange, routingKey, eventType, eventJson, exhausted);
+
+            persistFailedEvent(exchange, routingKey, eventType, eventJson, lastError);
+        }
+    }
+
+    private void persistFailedEvent(String exchange, String routingKey,
+                                    String eventType, String eventJson, String lastError) {
+        try {
+            FailedEvent failed = FailedEvent.builder()
+                    .eventJson(eventJson)
+                    .exchange(exchange)
+                    .routingKey(routingKey)
+                    .eventType(eventType)
+                    .lastError(lastError)
+                    .build();
+            failedEventRepository.save(failed);
+            log.info("Failed event persisted: id={} exchange={} rk={}", failed.getId(), exchange, routingKey);
+        } catch (Exception persistEx) {
+            log.error("CRITICAL: Failed to persist failed event! exchange={} rk={} eventType={} payload={}",
+                    exchange, routingKey, eventType, eventJson, persistEx);
         }
     }
 

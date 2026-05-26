@@ -172,17 +172,30 @@ public class ApprovalServiceImpl implements ApprovalService {
                 .map(step -> {
                     WorkflowInstance instance = instancesById.get(step.getWorkflowInstanceId());
                     List<ApprovalStep> allSteps = stepsByInstanceId.get(instance.getId());
+                    String title = fetchContractTitle(instance.getContractId(), principal);
                     return new PendingApprovalResponse(
                             step.getId(),
                             instance.getId(),
                             instance.getContractId(),
-                            "Sözleşme #" + instance.getContractId(),
+                            title,
                             step.getOrderIndex(),
                             allSteps.size(),
                             step.getCreatedAt()
                     );
                 })
                 .toList();
+    }
+
+    private String fetchContractTitle(Long contractId, HeaderPrincipal principal) {
+        try {
+            ContractDto contract = contractClient.getContract(
+                    contractId, principal.userId(),
+                    principal.organizationId(), principal.email(), principal.role());
+            return contract.title();
+        } catch (Exception e) {
+            log.warn("Failed to fetch contract title for contractId={}: {}", contractId, e.getMessage());
+            return "Sözleşme #" + contractId;
+        }
     }
 
     private ApprovalStep firstPendingStep(List<ApprovalStep> steps) {

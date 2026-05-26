@@ -4,6 +4,7 @@ import com.akitflow.common.exception.BaseExceptionHandler;
 import com.akitflow.common.web.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -32,5 +33,12 @@ public class GlobalExceptionHandler extends BaseExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex,
                                                             HttpServletRequest request) {
         return build(HttpStatus.FORBIDDEN, "Bu işlem için yetkiniz yok.", request);
+    }
+
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ErrorResponse> handleOptimisticLock(OptimisticLockingFailureException ex,
+                                                              HttpServletRequest request) {
+        log.warn("Optimistic lock conflict: {}", ex.getMessage());
+        return build(HttpStatus.CONFLICT, "Bu kaynak başka bir işlem tarafından değiştirilmiş. Lütfen yenileyip tekrar deneyin.", request);
     }
 }

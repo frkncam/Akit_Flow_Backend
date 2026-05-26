@@ -6,6 +6,8 @@ import com.akitflow.audit.repository.AuditEventRepository;
 import com.akitflow.common.exception.ResourceNotFoundException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -27,15 +29,20 @@ public class AuditServiceImpl implements AuditService {
 
     private final AuditEventRepository repository;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    private static final String INSERT_AUDIT = """
+            INSERT INTO audit_schema.audit_events
+            (event_id, event_type, aggregate_type, aggregate_id, organization_id, actor_id, payload, occurred_at)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7::jsonb, ?8)
+            ON CONFLICT (event_id) DO NOTHING
+            """;
+
     @Override
     @Transactional
     public void record(UUID eventId, String eventType, Instant occurredAt,
                        Long organizationId, Long actorId, JsonNode payload) {
-        if (repository.existsByEventId(eventId)) {
-            log.debug("Duplicate audit event ignored: eventId={}", eventId);
-            return;
-        }
-
         String prefix = eventType.split("\\.")[0];
 
         AggregateType aggregateType = switch (prefix) {
@@ -54,25 +61,32 @@ public class AuditServiceImpl implements AuditService {
             aggregateId = payload.get("contractId").asLong();
         }
 
-        AuditEvent auditEvent = AuditEvent.builder()
-                .eventId(eventId)
-                .eventType(eventType)
-                .aggregateType(aggregateType)
-                .aggregateId(aggregateId)
-                .organizationId(organizationId)
-                .actorId(actorId)
-                .payload(redactSensitiveFields(payload))
-                .occurredAt(occurredAt)
-                .build();
+        JsonNode sanitized = redactSensitiveFields(payload);
 
-        repository.save(auditEvent);
+        int updated = entityManager.createNativeQuery(INSERT_AUDIT)
+                .setParameter(1, eventId)
+                .setParameter(2, eventType)
+                .setParameter(3, aggregateType.name())
+                .setParameter(4, aggregateId)
+                .setParameter(5, organizationId)
+                .setParameter(6, actorId)
+                .setParameter(7, sanitized.toString())
+                .setParameter(8, occurredAt)
+                .executeUpdate();
+
+        if (updated > 0) {
+            log.debug("Audit event recorded: eventId={} eventType={}", eventId, eventType);
+        } else {
+            log.debug("Duplicate audit event skipped: eventId={}", eventId);
+        }
     }
 
     private static JsonNode redactSensitiveFields(JsonNode payload) {
-        if (payload instanceof ObjectNode objectNode) {
+        JsonNode copy = payload.deepCopy();
+        if (copy instanceof ObjectNode objectNode) {
             objectNode.remove(SENSITIVE_PAYLOAD_KEYS);
         }
-        return payload;
+        return copy;
     }
 
     @Override

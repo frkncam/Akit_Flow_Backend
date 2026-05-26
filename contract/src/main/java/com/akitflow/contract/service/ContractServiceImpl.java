@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.EnumSet;
 import java.util.List;
 
 @Service
@@ -150,8 +151,8 @@ public class ContractServiceImpl implements ContractService {
     public List<SignatureSummaryResponse> sendForSignature(Long id, SendForSignatureRequest request, HeaderPrincipal user) {
         Contract contract = findOwnedOrThrow(id, user);
 
-        if (contract.getStatus() != ContractStatus.DRAFT
-                && contract.getStatus() != ContractStatus.PENDING_SIGNATURE) {
+        if (!EnumSet.of(ContractStatus.DRAFT, ContractStatus.APPROVED, ContractStatus.PENDING_SIGNATURE)
+                .contains(contract.getStatus())) {
             throw new InvalidContractStateTransitionException(
                     contract.getStatus(), ContractStatus.PENDING_SIGNATURE);
         }
@@ -214,8 +215,7 @@ public class ContractServiceImpl implements ContractService {
                 base.currency(),
                 base.createdBy(),
                 base.createdAt(),
-                base.updatedAt(),
-                c.getWorkflowState()
+                base.updatedAt()
         );
     }
 }
