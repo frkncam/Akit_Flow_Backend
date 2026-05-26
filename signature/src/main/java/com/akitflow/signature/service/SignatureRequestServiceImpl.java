@@ -2,43 +2,32 @@ package com.akitflow.signature.service;
 
 import com.akitflow.common.client.dto.BatchSignatureRequest;
 import com.akitflow.common.client.dto.SignatureDto;
-import com.akitflow.common.event.payload.SignatureRequestedPayload;
 import com.akitflow.signature.config.AppProperties;
-import com.akitflow.signature.domain.Signature;
-import com.akitflow.signature.domain.enums.SignatureStatus;
-import com.akitflow.signature.event.publisher.SignatureEventPublisher;
-import com.akitflow.signature.mapper.SignatureMapper;
 import com.akitflow.signature.provider.ESignatureProvider;
 import com.akitflow.signature.provider.ProviderSignatureResult;
 import com.akitflow.signature.provider.SignerInfo;
-import com.akitflow.signature.repository.SignatureRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class SignatureRequestServiceImpl implements SignatureRequestService {
 
-    private final SignatureRepository signatureRepository;
-    private final SignatureMapper mapper;
     private final ESignatureProvider provider;
     private final MinioService minioService;
-    private final SignatureEventPublisher eventPublisher;
+    private final SignaturePersistenceService persistenceService;
     private final AppProperties appProperties;
 
     @Override
     public List<SignatureDto> sendForSignature(BatchSignatureRequest request, Long organizationId, Long actorId) {
         SignatureSetup setup = prepare(request, organizationId, actorId);
         ProviderSignatureResult providerRes = provider.requestSignatures(setup.toProviderRequest());
-        return persist(setup, providerRes);
+        return persistenceService.persist(setup, providerRes);
     }
 
     private SignatureSetup prepare(BatchSignatureRequest request, Long organizationId, Long actorId) {
@@ -52,7 +41,7 @@ public class SignatureRequestServiceImpl implements SignatureRequestService {
         return new SignatureSetup(request, organizationId, actorId, pdf, signers, validity);
     }
 
-    private record SignatureSetup(
+    public record SignatureSetup(
             BatchSignatureRequest req,
             Long organizationId,
             Long actorId,
@@ -69,53 +58,5 @@ public class SignatureRequestServiceImpl implements SignatureRequestService {
                     validity
             );
         }
-    }
-
-    @Transactional
-    List<SignatureDto> persist(SignatureSetup setup, ProviderSignatureResult providerRes) {
-        Long contractId = setup.req().contractId();
-        Long orgId = setup.organizationId();
-
-        signatureRepository.findAllByContractIdAndStatus(contractId, SignatureStatus.PENDING)
-                .forEach(s -> s.setStatus(SignatureStatus.CANCELLED));
-
-        UUID batchId = UUID.randomUUID();
-        Instant expiresAt = Instant.now().plus(setup.validity());
-
-        List<Signature> created = setup.signers().stream()
-                .map(s -> Signature.builder()
-                        .contractId(contractId)
-                        .contractTitle(setup.req().contractTitle())
-                        .fileId(setup.req().fileId())
-                        .fileStorageKey(setup.req().fileStorageKey())
-                        .fileName(setup.req().fileName())
-                        .organizationId(orgId)
-                        .signerName(s.name())
-                        .signerEmail(s.email())
-                        .status(SignatureStatus.PENDING)
-                        .token(SignatureTokenGenerator.newToken())
-                        .providerName(providerRes.providerName())
-                        .externalRef(providerRes.signerExternalRefs().get(s.email()))
-                        .expiresAt(expiresAt)
-                        .batchId(batchId)
-                        .build())
-                .toList();
-        signatureRepository.saveAll(created);
-
-        for (Signature s : created) {
-            eventPublisher.publishSignatureRequested(
-                    orgId, setup.actorId(),
-                    new SignatureRequestedPayload(
-                            contractId,
-                            setup.req().contractTitle(),
-                            s.getSignerName(),
-                            s.getSignerEmail(),
-                            s.getToken(),
-                            s.getExpiresAt()
-                    ));
-        }
-
-        log.info("Send-for-signature: contractId={}, signerCount={}", contractId, created.size());
-        return created.stream().map(mapper::toDto).toList();
     }
 }
