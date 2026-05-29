@@ -1,6 +1,7 @@
 --liquibase formatted sql
 
---changeset akitflow:001 labels:init comment:auth_schema tabloları
+--changeset akitflow:001-init-auth-schema
+CREATE SCHEMA IF NOT EXISTS auth_schema;
 
 CREATE TABLE auth_schema.organizations (
     id          BIGSERIAL    PRIMARY KEY,
@@ -42,6 +43,19 @@ CREATE TABLE auth_schema.invite_tokens (
     expires_at       TIMESTAMPTZ  NOT NULL,
     used_at          TIMESTAMPTZ,
     created_at       TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+
+CREATE TABLE auth_schema.failed_events (
+    id               BIGSERIAL     PRIMARY KEY,
+    event_json       TEXT          NOT NULL,
+    exchange         VARCHAR(128)  NOT NULL,
+    routing_key      VARCHAR(128)  NOT NULL,
+    event_type       VARCHAR(128)  NOT NULL,
+    last_error       VARCHAR(1024),
+    terminal_failure BOOLEAN       NOT NULL DEFAULT FALSE,
+    retry_count      INTEGER       NOT NULL DEFAULT 0,
+    created_at       TIMESTAMPTZ   NOT NULL DEFAULT now(),
+    last_retry_at    TIMESTAMPTZ
 );
 
 CREATE INDEX idx_users_org        ON auth_schema.users(organization_id);

@@ -104,7 +104,9 @@
       "Bash(Select-Object Name, Mode, Length)",
       "Bash(Format-Table -AutoSize)",
       "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\furka\\\\OneDrive\\\\Desktop\\\\akit-flow\\\\AkitFlow_Backend\" -Depth 1 -Directory | ForEach-Object { $_.Name })",
-      "Bash(Select-String -Pattern \"Tests run:|BUILD\")"
+      "Bash(Select-String -Pattern \"Tests run:|BUILD\")",
+      "Bash(dir C:\\\\Users\\\\furka\\\\OneDrive\\\\Desktop\\\\akit-flow\\\\AkitFlow_Backend *)",
+      "Bash(git *)"
     ]
   }
 }
