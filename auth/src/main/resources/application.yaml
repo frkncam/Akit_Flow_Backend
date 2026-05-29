@@ -17,6 +17,7 @@
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
     default-schema: auth_schema
+    liquibase-schema: public
 
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}

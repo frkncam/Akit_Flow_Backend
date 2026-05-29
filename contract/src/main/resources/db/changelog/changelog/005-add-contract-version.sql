@@ -1,1 +1,0 @@
-ALTER TABLE contract_schema.contracts ADD COLUMN IF NOT EXISTS version BIGINT NOT NULL DEFAULT 0;

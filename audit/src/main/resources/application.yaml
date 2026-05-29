@@ -16,6 +16,7 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
     default-schema: audit_schema
+    liquibase-schema: public
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: 5672

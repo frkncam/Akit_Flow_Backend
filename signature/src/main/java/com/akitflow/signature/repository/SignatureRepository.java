@@ -3,6 +3,8 @@ package com.akitflow.signature.repository;
 import com.akitflow.signature.domain.Signature;
 import com.akitflow.signature.domain.enums.SignatureStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -16,7 +18,8 @@ public interface SignatureRepository extends JpaRepository<Signature, Long> {
 
     List<Signature> findAllByContractIdAndStatus(Long contractId, SignatureStatus status);
 
-    List<Signature> findAllByContractIdAndOrganizationId(Long contractId, Long organizationId);
+    @Query("SELECT s FROM Signature s WHERE s.contractId = :contractId AND s.organizationId = :organizationId AND s.status != 'CANCELLED'")
+    List<Signature> findAllByContractIdAndOrganizationId(@Param("contractId") Long contractId, @Param("organizationId") Long organizationId);
 
     List<Signature> findAllByContractIdAndBatchId(Long contractId, UUID batchId);
 
