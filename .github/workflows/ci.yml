@@ -15,6 +15,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    timeout-minutes: 20         # takılan bir job kotayı yemesin, otomatik kesilsin
     strategy:
       fail-fast: false            # bir servis patlasa diğerleri devam etsin
       matrix:
