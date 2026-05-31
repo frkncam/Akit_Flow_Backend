@@ -9,7 +9,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication
 @EnableFeignClients(basePackages = "com.akitflow.common.client")
 @EntityScan(basePackages = "com.akitflow.workflow.domain")
-@EnableJpaRepositories(basePackages = "com.akitflow.workflow.repository")
+@EnableJpaRepositories(
+    basePackages = "com.akitflow.workflow.repository",
+    repositoryBaseClass = com.akitflow.common.tenant.TenantAwareJpaRepository.class
+)
 public class WorkflowApplication {
 
     public static void main(String[] args) {

@@ -12,7 +12,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EnableConfigurationProperties(AppProperties.class)
 @EnableFeignClients(basePackages = "com.akitflow.common.client")
 @EntityScan(basePackages = "com.akitflow.contract.domain")
-@EnableJpaRepositories(basePackages = "com.akitflow.contract.repository")
+@EnableJpaRepositories(
+    basePackages = "com.akitflow.contract.repository",
+    repositoryBaseClass = com.akitflow.common.tenant.TenantAwareJpaRepository.class
+)
 public class ContractApplication {
 
     public static void main(String[] args) {

@@ -10,7 +10,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication
 @EnableConfigurationProperties(AppProperties.class)
 @EntityScan(basePackages = "com.akitflow.signature.domain")
-@EnableJpaRepositories(basePackages = "com.akitflow.signature.repository")
+@EnableJpaRepositories(
+    basePackages = "com.akitflow.signature.repository",
+    repositoryBaseClass = com.akitflow.common.tenant.TenantAwareJpaRepository.class
+)
 public class SignatureApplication {
 
     public static void main(String[] args) {

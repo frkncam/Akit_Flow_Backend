@@ -1,5 +1,7 @@
 package com.akitflow.signature.domain;
 
+import com.akitflow.common.tenant.TenantEntityListener;
+import com.akitflow.common.tenant.TenantScoped;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Filter;
 
 import java.time.Instant;
 
@@ -17,7 +20,9 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrganizationCertificate {
+@Filter(name = "tenantFilter")
+@EntityListeners(TenantEntityListener.class)
+public class OrganizationCertificate implements TenantScoped {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
