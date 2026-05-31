@@ -6,8 +6,11 @@ import com.akitflow.signature.dto.response.SignatureViewResponse;
 import com.akitflow.signature.exception.SignatureExpiredException;
 import com.akitflow.signature.mapper.SignatureMapper;
 import com.akitflow.signature.repository.SignatureRepository;
+import com.querydsl.core.types.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,5 +56,11 @@ public class SignaturePublicViewServiceImpl implements SignaturePublicViewServic
         return signatureRepository.findAllByContractIdAndOrganizationId(contractId, organizationId).stream()
                 .map(mapper::toDto)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<SignatureDto> search(Predicate predicate, Pageable pageable) {
+        return signatureRepository.findAll(predicate, pageable).map(mapper::toDto);
     }
 }

@@ -2,14 +2,19 @@ package com.akitflow.signature.controller;
 
 import com.akitflow.common.client.dto.BatchSignatureRequest;
 import com.akitflow.common.client.dto.SignatureDto;
+import com.akitflow.common.query.CommonPredicate;
 import com.akitflow.common.security.HeaderPrincipal;
+import com.akitflow.common.web.PageResponse;
+import com.akitflow.signature.domain.Signature;
 import com.akitflow.signature.dto.request.SignatureRejectRequest;
 import com.akitflow.signature.dto.response.SignatureViewResponse;
 import com.akitflow.signature.service.SignatureDecisionService;
 import com.akitflow.signature.service.SignaturePublicViewService;
 import com.akitflow.signature.service.SignatureRequestService;
+import com.querydsl.core.types.Predicate;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +29,13 @@ public class SignatureController {
     private final SignatureRequestService requestService;
     private final SignaturePublicViewService viewService;
     private final SignatureDecisionService decisionService;
+
+    @GetMapping
+    public PageResponse<SignatureDto> list(
+            @CommonPredicate(root = Signature.class) Predicate predicate,
+            Pageable pageable) {
+        return PageResponse.from(viewService.search(predicate, pageable));
+    }
 
     @PostMapping("/batch")
     public List<SignatureDto> sendForSignature(@Valid @RequestBody BatchSignatureRequest request,

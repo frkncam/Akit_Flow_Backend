@@ -1,5 +1,6 @@
 package com.akitflow.common.exception;
 
+import com.akitflow.common.query.PredicateException;
 import com.akitflow.common.web.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,12 @@ public abstract class BaseExceptionHandler {
                 .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
                 .collect(Collectors.joining("; "));
         return build(HttpStatus.BAD_REQUEST, message, request);
+    }
+
+    @ExceptionHandler(PredicateException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidFilter(PredicateException ex,
+                                                             HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
     }
 
     @ExceptionHandler(Exception.class)

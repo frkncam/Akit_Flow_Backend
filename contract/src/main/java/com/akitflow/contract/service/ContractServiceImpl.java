@@ -22,6 +22,7 @@ import com.akitflow.contract.exception.InvalidContractStateTransitionException;
 import com.akitflow.contract.mapper.ContractMapper;
 import com.akitflow.contract.repository.ContractFileRepository;
 import com.akitflow.contract.repository.ContractRepository;
+import com.querydsl.core.types.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -81,9 +82,9 @@ public class ContractServiceImpl implements ContractService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ContractResponse> list(Pageable pageable, HeaderPrincipal user) {
-        return contractRepository.findAllByOrganizationId(user.organizationId(), pageable)
-                .map(this::toResponse);
+    public Page<ContractResponse> search(Predicate predicate, Pageable pageable, HeaderPrincipal user) {
+        // Tenant filtresi TenantFilterAspect tarafından otomatik uygulanır; predicate sadece frontend filtreleri.
+        return contractRepository.findAll(predicate, pageable).map(this::toResponse);
     }
 
     @Override

@@ -22,11 +22,15 @@ import com.akitflow.workflow.mapper.WorkflowMapper;
 import com.akitflow.workflow.repository.ApprovalStepRepository;
 import com.akitflow.workflow.repository.WorkflowInstanceRepository;
 import com.akitflow.workflow.repository.WorkflowTransitionRepository;
+import com.querydsl.core.types.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -97,6 +101,25 @@ public class WorkflowServiceImpl implements WorkflowService {
                         0, approvers.size()));
 
         return buildResponse(instance);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<WorkflowResponse> search(Predicate predicate, Pageable pageable, HeaderPrincipal principal) {
+        return workflowInstanceRepository.findAll(predicate, pageable)
+                .map(this::toSummaryResponse);
+    }
+
+    private WorkflowResponse toSummaryResponse(WorkflowInstance instance) {
+        return new WorkflowResponse(
+                instance.getId(),
+                instance.getContractId(),
+                instance.getCurrentState().name(),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                instance.getCreatedAt(),
+                instance.getUpdatedAt()
+        );
     }
 
     @Override

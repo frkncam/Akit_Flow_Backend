@@ -106,7 +106,10 @@
       "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\furka\\\\OneDrive\\\\Desktop\\\\akit-flow\\\\AkitFlow_Backend\" -Depth 1 -Directory | ForEach-Object { $_.Name })",
       "Bash(Select-String -Pattern \"Tests run:|BUILD\")",
       "Bash(dir C:\\\\Users\\\\furka\\\\OneDrive\\\\Desktop\\\\akit-flow\\\\AkitFlow_Backend *)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Read(//c/Users/furka/OneDrive/Desktop/akit-flow/Analiz/**)",
+      "Bash(ls -la \"31 MAYIS\")",
+      "Bash(Test-Path *)"
     ]
   }
 }
