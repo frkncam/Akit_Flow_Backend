@@ -17,6 +17,7 @@ RUN mvn -B -ntp -f template/pom.xml package -DskipTests
 
 # ---- runtime aşaması ----
 FROM eclipse-temurin:21-jre-alpine AS runtime
+LABEL org.opencontainers.image.source=https://github.com/frkncam/Akit_Flow_Backend
 RUN addgroup -S app && adduser -S app -G app
 WORKDIR /app
 COPY --from=build /workspace/template/target/*.jar app.jar

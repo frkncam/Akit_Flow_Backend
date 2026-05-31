@@ -15,6 +15,8 @@ RUN mvn -B -ntp -f eureka-server/pom.xml package -DskipTests
 # ---- runtime aşaması: SADECE JRE (hafif) ----
 FROM eclipse-temurin:21-jre-alpine AS runtime
 
+LABEL org.opencontainers.image.source=https://github.com/frkncam/Akit_Flow_Backend
+
 # Güvenlik: root yerine ayrıcalıksız 'app' kullanıcısı
 RUN addgroup -S app && adduser -S app -G app
 WORKDIR /app

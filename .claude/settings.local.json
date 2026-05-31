@@ -117,7 +117,11 @@
       "Bash(ls -la .dockerignore)",
       "Bash(ls -la compose.prod.yml)",
       "PowerShell(docker ps *)",
-      "PowerShell(docker compose *)"
+      "PowerShell(docker compose *)",
+      "Bash(gh auth *)",
+      "Bash(gh repo *)",
+      "PowerShell(docker push *)",
+      "PowerShell(docker pull *)"
     ]
   }
 }
