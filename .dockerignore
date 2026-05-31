@@ -1,0 +1,10 @@
+# Konum: AkitFlow_Backend/.dockerignore
+**/target/
+.git/
+.github/
+.idea/
+**/*.iml
+Analiz/
+postman/
+**/*.md
+**/.gitignore

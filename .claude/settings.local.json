@@ -109,7 +109,15 @@
       "Bash(git *)",
       "Read(//c/Users/furka/OneDrive/Desktop/akit-flow/Analiz/**)",
       "Bash(ls -la \"31 MAYIS\")",
-      "Bash(Test-Path *)"
+      "Bash(Test-Path *)",
+      "Bash(grep -n 'localhost\\\\|${' contract/src/main/resources/application.yaml)",
+      "Bash(grep -n 'localhost\\\\|${' notification/src/main/resources/application.yaml)",
+      "Bash(grep -n 'localhost\\\\|${' auth/src/main/resources/application.yaml)",
+      "Bash(grep -n 'localhost\\\\|${' signature/src/main/resources/application.yaml)",
+      "Bash(ls -la .dockerignore)",
+      "Bash(ls -la compose.prod.yml)",
+      "PowerShell(docker ps *)",
+      "PowerShell(docker compose *)"
     ]
   }
 }

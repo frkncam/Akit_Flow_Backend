@@ -40,8 +40,12 @@ public class CommonAutoConfiguration {
         }
 
         @Bean
-        CommonPredicateWebConfig commonPredicateWebConfig(CommonPredicateResolver resolver) {
-            return new CommonPredicateWebConfig(resolver);
+        CommonPredicateWebConfig commonPredicateWebConfig(
+                CommonPredicateResolver resolver,
+                org.springframework.beans.factory.ObjectProvider<
+                        org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter>
+                        adapterProvider) {
+            return new CommonPredicateWebConfig(resolver, adapterProvider);
         }
     }
 }
