@@ -1,11 +1,14 @@
 package com.akitflow.workflow.domain;
 
+import com.akitflow.common.tenant.TenantEntityListener;
+import com.akitflow.common.tenant.TenantScoped;
 import com.akitflow.workflow.domain.enums.WorkflowState;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
@@ -15,7 +18,9 @@ import java.time.Instant;
 @Getter
 @Setter
 @NoArgsConstructor
-public class WorkflowInstance {
+@Filter(name = "tenantFilter")
+@EntityListeners(TenantEntityListener.class)
+public class WorkflowInstance implements TenantScoped {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

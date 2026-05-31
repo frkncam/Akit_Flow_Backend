@@ -1,5 +1,7 @@
 package com.akitflow.signature.domain;
 
+import com.akitflow.common.tenant.TenantEntityListener;
+import com.akitflow.common.tenant.TenantScoped;
 import com.akitflow.signature.domain.enums.SignatureStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -8,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -21,7 +24,9 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Signature {
+@Filter(name = "tenantFilter")
+@EntityListeners(TenantEntityListener.class)
+public class Signature implements TenantScoped {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,9 +1,12 @@
 package com.akitflow.audit.domain;
 
 import com.akitflow.audit.domain.enums.AggregateType;
+import com.akitflow.common.tenant.TenantEntityListener;
+import com.akitflow.common.tenant.TenantScoped;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -15,7 +18,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -25,10 +30,13 @@ import java.util.UUID;
 @Entity
 @Table(name = "audit_events", schema = "audit_schema")
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class AuditEvent {
+@Filter(name = "tenantFilter")
+@EntityListeners(TenantEntityListener.class)
+public class AuditEvent implements TenantScoped {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

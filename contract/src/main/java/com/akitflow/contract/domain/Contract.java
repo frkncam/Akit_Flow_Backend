@@ -1,5 +1,7 @@
 package com.akitflow.contract.domain;
 
+import com.akitflow.common.tenant.TenantScoped;
+import com.akitflow.common.tenant.TenantScopedEntity;
 import com.akitflow.contract.domain.enums.ContractStatus;
 import com.akitflow.contract.domain.enums.ContractType;
 import com.akitflow.contract.exception.InvalidContractStateTransitionException;
@@ -26,7 +28,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Contract {
+public class Contract extends TenantScopedEntity implements TenantScoped {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

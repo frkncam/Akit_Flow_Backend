@@ -7,7 +7,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
 @EntityScan(basePackages = "com.akitflow.template.domain")
-@EnableJpaRepositories(basePackages = "com.akitflow.template.repository")
+@EnableJpaRepositories(
+    basePackages = "com.akitflow.template.repository",
+    repositoryBaseClass = com.akitflow.common.tenant.TenantAwareJpaRepository.class
+)
 public class TemplateApplication {
 
     public static void main(String[] args) {
