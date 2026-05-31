@@ -1,0 +1,52 @@
+name: CI
+
+# Ne zaman çalışsın: main branch'ine push ve bu branch'e açılan PR'larda
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Aynı dalda yeni push gelirse, süren eski çalışmayı iptal et (zaman + kota tasarrufu)
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false            # bir servis patlasa diğerleri devam etsin
+      matrix:
+        module:
+          - api-gateway
+          - auth
+          - contract
+          - notification
+          - workflow
+          - audit
+          - template
+          - signature
+          - eureka-server
+    name: build (${{ matrix.module }})
+    steps:
+      # 1) Repo'yu runner'a indir
+      - uses: actions/checkout@v4
+
+      # 2) Java 21 (Temurin) kur + Maven ~/.m2 cache'ini aç
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # 3) ÖNCE common'ı yerel Maven deposuna kur (servisler buna bağlı, reactor yok)
+      - name: Install common
+        run: mvn -B -ntp -f common/pom.xml install -DskipTests
+
+      # 4) Servisi derle + test et; context-yükleyen *ApplicationTests dışlanır
+      - name: Build & test ${{ matrix.module }}
+        run: >
+          mvn -B -ntp -f ${{ matrix.module }}/pom.xml verify
+          -Dtest='!*ApplicationTests'
+          -Dsurefire.failIfNoSpecifiedTests=false

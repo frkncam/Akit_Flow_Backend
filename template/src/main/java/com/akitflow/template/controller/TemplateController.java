@@ -1,16 +1,20 @@
 package com.akitflow.template.controller;
 
-import com.akitflow.template.domain.TemplateCategory;
+import com.akitflow.common.query.CommonPredicate;
+import com.akitflow.common.security.HeaderPrincipal;
+import com.akitflow.common.client.dto.TemplateDto;
+import com.akitflow.common.web.PageResponse;
+import com.akitflow.template.domain.Template;
 import com.akitflow.template.dto.request.TemplateCreateRequest;
 import com.akitflow.template.dto.request.TemplatePreviewRequest;
 import com.akitflow.template.dto.request.TemplateUpdateRequest;
 import com.akitflow.template.dto.response.SystemVariableResponse;
 import com.akitflow.template.dto.response.TemplatePreviewResponse;
-import com.akitflow.common.client.dto.TemplateDto;
-import com.akitflow.common.security.HeaderPrincipal;
 import com.akitflow.template.service.TemplateService;
+import com.querydsl.core.types.Predicate;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -32,9 +36,11 @@ public class TemplateController {
     }
 
     @GetMapping
-    public List<TemplateDto> list(@RequestParam(value = "category", required = false) TemplateCategory category,
-                                       @AuthenticationPrincipal HeaderPrincipal user) {
-        return service.list(user, category);
+    public PageResponse<TemplateDto> list(
+            @CommonPredicate(root = Template.class) Predicate predicate,
+            Pageable pageable,
+            @AuthenticationPrincipal HeaderPrincipal user) {
+        return PageResponse.from(service.search(predicate, pageable, user));
     }
 
     @GetMapping("/system-variables")

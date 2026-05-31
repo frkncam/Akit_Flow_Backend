@@ -1,20 +1,22 @@
 package com.akitflow.template.service;
 
+import com.akitflow.common.client.dto.TemplateDto;
+import com.akitflow.common.exception.ResourceNotFoundException;
+import com.akitflow.common.security.HeaderPrincipal;
 import com.akitflow.template.domain.Template;
-import com.akitflow.template.domain.TemplateCategory;
 import com.akitflow.template.domain.TemplateVariableData;
 import com.akitflow.template.dto.request.TemplateCreateRequest;
 import com.akitflow.template.dto.request.TemplatePreviewRequest;
 import com.akitflow.template.dto.request.TemplateUpdateRequest;
 import com.akitflow.template.dto.response.SystemVariableResponse;
 import com.akitflow.template.dto.response.TemplatePreviewResponse;
-import com.akitflow.common.client.dto.TemplateDto;
-import com.akitflow.common.exception.ResourceNotFoundException;
 import com.akitflow.template.mapper.TemplateMapper;
 import com.akitflow.template.repository.TemplateRepository;
-import com.akitflow.common.security.HeaderPrincipal;
+import com.querydsl.core.types.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,11 +52,8 @@ public class TemplateServiceImpl implements TemplateService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TemplateDto> list(HeaderPrincipal user, TemplateCategory category) {
-        List<Template> entities = category == null
-                ? repository.findAllByOrganizationId(user.organizationId())
-                : repository.findAllByOrganizationIdAndCategory(user.organizationId(), category);
-        return entities.stream().map(mapper::toDto).toList();
+    public Page<TemplateDto> search(Predicate predicate, Pageable pageable, HeaderPrincipal user) {
+        return repository.findAll(predicate, pageable).map(mapper::toDto);
     }
 
     @Override

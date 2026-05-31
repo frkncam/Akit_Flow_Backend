@@ -1,5 +1,7 @@
 package com.akitflow.contract.controller;
 
+import com.akitflow.common.query.CommonPredicate;
+import com.akitflow.contract.domain.Contract;
 import com.akitflow.contract.dto.request.ContractCreateRequest;
 import com.akitflow.contract.dto.request.ContractStatusUpdateRequest;
 import com.akitflow.contract.dto.request.ContractUpdateRequest;
@@ -9,6 +11,7 @@ import com.akitflow.contract.dto.response.PageResponse;
 import com.akitflow.contract.dto.response.SignatureSummaryResponse;
 import com.akitflow.common.security.HeaderPrincipal;
 import com.akitflow.contract.service.ContractService;
+import com.querydsl.core.types.Predicate;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -33,9 +36,11 @@ public class ContractController {
     }
 
     @GetMapping
-    public PageResponse<ContractResponse> list(Pageable pageable,
-                                               @AuthenticationPrincipal HeaderPrincipal user) {
-        return PageResponse.from(contractService.list(pageable, user));
+    public PageResponse<ContractResponse> list(
+            @CommonPredicate(root = Contract.class) Predicate predicate,
+            Pageable pageable,
+            @AuthenticationPrincipal HeaderPrincipal user) {
+        return PageResponse.from(contractService.search(predicate, pageable, user));
     }
 
     @GetMapping("/{id}")

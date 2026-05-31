@@ -7,6 +7,7 @@ import com.akitflow.contract.dto.request.SendForSignatureRequest;
 import com.akitflow.contract.dto.response.ContractResponse;
 import com.akitflow.contract.dto.response.SignatureSummaryResponse;
 import com.akitflow.common.security.HeaderPrincipal;
+import com.querydsl.core.types.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -16,7 +17,7 @@ public interface ContractService {
 
     ContractResponse create(ContractCreateRequest request, HeaderPrincipal user);
 
-    Page<ContractResponse> list(Pageable pageable, HeaderPrincipal user);
+    Page<ContractResponse> search(Predicate predicate, Pageable pageable, HeaderPrincipal user);
 
     ContractResponse get(Long id, HeaderPrincipal user);
 

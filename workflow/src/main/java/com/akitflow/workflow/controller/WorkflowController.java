@@ -1,14 +1,19 @@
 package com.akitflow.workflow.controller;
 
+import com.akitflow.common.query.CommonPredicate;
 import com.akitflow.common.security.HeaderPrincipal;
+import com.akitflow.common.web.PageResponse;
+import com.akitflow.workflow.domain.WorkflowInstance;
 import com.akitflow.workflow.dto.request.ApprovalDecisionRequest;
 import com.akitflow.workflow.dto.request.StartWorkflowRequest;
 import com.akitflow.workflow.dto.response.PendingApprovalResponse;
 import com.akitflow.workflow.dto.response.WorkflowResponse;
 import com.akitflow.workflow.service.ApprovalService;
 import com.akitflow.workflow.service.WorkflowService;
+import com.querydsl.core.types.Predicate;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,6 +28,14 @@ public class WorkflowController {
 
     private final WorkflowService workflowService;
     private final ApprovalService approvalService;
+
+    @GetMapping
+    public PageResponse<WorkflowResponse> list(
+            @CommonPredicate(root = WorkflowInstance.class) Predicate predicate,
+            Pageable pageable,
+            @AuthenticationPrincipal HeaderPrincipal principal) {
+        return PageResponse.from(workflowService.search(predicate, pageable, principal));
+    }
 
     @PostMapping("/contracts/{contractId}/start")
     public ResponseEntity<WorkflowResponse> startWorkflow(
