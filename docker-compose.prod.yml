@@ -1,0 +1,260 @@
+# docker-compose.prod.yml — AkitFlow prod (Hetzner sunucu)
+# Dev'den FARKLAR:
+#   - build YOK → GHCR'dan hazir image cekilir (image: ghcr.io/frkncam/<modul>:latest)
+#   - altyapi portlari host'a PUBLISH EDILMEZ (Docker ufw'yi deler; sadece ic ag)
+#   - her serviste mem_limit (8 GB RAM'e 9 JVM sigsin; image'daki MaxRAMPercentage=75 limiti baz alir)
+#   - disariya sadece gateway 127.0.0.1:8080 (nginx/06 onune gececek)
+#
+# Calistir:  docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+
+# --- Tum Spring servisleri icin ortak ayarlar (YAML anchor) ---
+x-app-common: &app-common
+  restart: unless-stopped
+  environment: &app-env
+    SPRING_PROFILES_ACTIVE: docker
+    EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+
+x-db-env: &db-env
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-akitflow}
+  SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-akitflow}
+  SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+  SPRING_RABBITMQ_HOST: rabbitmq
+  SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+  SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+
+services:
+
+  # ============ ALTYAPI ============
+  postgres:
+    image: postgres:16-alpine
+    container_name: akitflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-akitflow}
+      POSTGRES_USER: ${DB_USERNAME:-akitflow}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    # ports: YOK — sadece ic ag (5432 internete acilmaz)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-akitflow} -d ${DB_NAME:-akitflow}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    mem_limit: 512m
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: akitflow-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    # ports: YOK — 5672/15672 sadece ic ag
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    mem_limit: 512m
+
+  minio:
+    image: minio/minio:latest
+    container_name: akitflow-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    # ports: YOK — 9000/9001 sadece ic ag
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    mem_limit: 256m
+
+  minio-bootstrap:
+    image: minio/mc:latest
+    container_name: akitflow-minio-bootstrap
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY};
+      mc mb -p local/akitflow-contracts || true;
+      echo 'MinIO bootstrap complete';
+      "
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: akitflow-mailpit
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8025"   # Web UI sadece localhost (SSH tunnel ile bakilir, internete kapali)
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    mem_limit: 128m
+
+  # ============ EUREKA (servis kesfi) ============
+  eureka-server:
+    <<: *app-common
+    image: ghcr.io/frkncam/eureka-server:latest
+    container_name: akitflow-eureka-server
+    # ports: YOK — ic ag (8761)
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8761/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    mem_limit: 400m
+
+  # ============ API GATEWAY (tek dis kapi) ============
+  api-gateway:
+    <<: *app-common
+    image: ghcr.io/frkncam/api-gateway:latest
+    container_name: akitflow-api-gateway
+    ports:
+      - "127.0.0.1:8080:8080"   # sadece localhost; nginx (06) buraya proxy yapacak
+    environment:
+      <<: *app-env
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth:8081/oauth2/jwks
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    mem_limit: 512m
+
+  # ============ UYGULAMA SERVISLERI ============
+  auth:
+    <<: *app-common
+    image: ghcr.io/frkncam/auth:latest
+    container_name: akitflow-auth
+    environment:
+      <<: [*app-env, *db-env]
+      # JWT anahtarlari image'da YOK (gitignore'lu *.pem). Disaridan mount edip file: ile okutuyoruz.
+      AUTH_PRIVATE_KEY_PATH: file:/keys/private.pem
+      AUTH_PUBLIC_KEY_PATH: file:/keys/public.pem
+    volumes:
+      - ./keys:/keys:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    mem_limit: 600m
+
+  contract:
+    <<: *app-common
+    image: ghcr.io/frkncam/contract:latest
+    container_name: akitflow-contract
+    environment:
+      <<: [*app-env, *db-env]
+      APP_MINIO_URL: http://minio:9000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio-bootstrap:
+        condition: service_completed_successfully
+      eureka-server:
+        condition: service_healthy
+    mem_limit: 512m
+
+  notification:
+    <<: *app-common
+    image: ghcr.io/frkncam/notification:latest
+    container_name: akitflow-notification
+    environment:
+      <<: [*app-env, *db-env]
+      SPRING_MAIL_HOST: mailpit
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    mem_limit: 512m
+
+  template:
+    <<: *app-common
+    image: ghcr.io/frkncam/template:latest
+    container_name: akitflow-template
+    environment:
+      <<: [*app-env, *db-env]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    mem_limit: 512m
+
+  signature:
+    <<: *app-common
+    image: ghcr.io/frkncam/signature:latest
+    container_name: akitflow-signature
+    environment:
+      <<: [*app-env, *db-env]
+      APP_MINIO_URL: http://minio:9000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio-bootstrap:
+        condition: service_completed_successfully
+      eureka-server:
+        condition: service_healthy
+    mem_limit: 512m
+
+  workflow:
+    <<: *app-common
+    image: ghcr.io/frkncam/workflow:latest
+    container_name: akitflow-workflow
+    environment:
+      <<: [*app-env, *db-env]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    mem_limit: 512m
+
+  audit:
+    <<: *app-common
+    image: ghcr.io/frkncam/audit:latest
+    container_name: akitflow-audit
+    environment:
+      <<: [*app-env, *db-env]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    mem_limit: 512m
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+  minio_data:
