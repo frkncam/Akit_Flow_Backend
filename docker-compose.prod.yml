@@ -136,6 +136,17 @@ services:
         condition: service_healthy
     mem_limit: 512m
 
+  # ============ FRONTEND (Next.js) ============
+  # nginx (06) buraya proxy yapacak: / -> 127.0.0.1:3000
+  # NEXT_PUBLIC_API_URL image'a build-time bos ("") gomulu -> same-origin (/api -> gateway).
+  frontend:
+    image: ghcr.io/frkncam/frontend:latest
+    container_name: akitflow-frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"   # sadece localhost; nginx onune gececek
+    mem_limit: 256m
+
   # ============ UYGULAMA SERVISLERI ============
   auth:
     <<: *app-common
