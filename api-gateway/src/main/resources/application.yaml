@@ -21,7 +21,7 @@
         - id: signature-route
           uri: lb://signature-service
           predicates:
-            - Path=/api/v1/signatures/**,/sign/**
+            - Path=/api/v1/signatures/**,/api/v1/public/sign/**
         - id: notification-route
           uri: lb://notification-service
           predicates:

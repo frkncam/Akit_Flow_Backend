@@ -23,7 +23,7 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a
                         .requestMatchers("/actuator/health", "/actuator/info",
-                                         "/sign/**",
+                                         "/api/v1/public/sign/**",
                                          "/v3/api-docs/**",
                                          "/swagger-ui/**",
                                          "/swagger-ui.html",

@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/sign")
+@RequestMapping("/api/v1/public/sign")
 @RequiredArgsConstructor
 public class PublicSignatureController {
 
