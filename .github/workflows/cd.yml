@@ -64,3 +64,52 @@ jobs:
           # GitHub Actions cache: build'i hızlandır (her matrix'e ayrı scope, çakışmasın)
           cache-from: type=gha,scope=${{ matrix.module }}
           cache-to: type=gha,scope=${{ matrix.module }},mode=max
+
+  # ============================================================
+  # DEPLOY: build-push bitince sunucuda guncelle (insan eli degmeden)
+  # Akis: 9 image GHCR'da hazir -> SSH ile sunucu -> compose pull & up -d
+  # ============================================================
+  deploy:
+    needs: build-push          # TUM matrix image'lari uretilmeden deploy baslamaz
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: read           # sunucu GHCR'dan cekebilsin (GITHUB_TOKEN ile login)
+    # Manuel onay kapisi istersen: GitHub'da "production" environment kurup asagiyi ac.
+    # environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1) Guncel compose dosyasini sunucuya kopyala (repodaki degisiklikler yansisin).
+      #    .env.prod ve keys/ sunucuda kalir; onlara DOKUNMAYIZ.
+      - name: Compose dosyasini sunucuya gonder
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HETZNER_HOST }}
+          username: deploy
+          key: ${{ secrets.HETZNER_SSH_KEY }}
+          source: docker-compose.prod.yml
+          target: /opt/akitflow
+
+      # 2) Sunucuda: GHCR login + pull + up -d + eski image temizligi
+      - name: Sunucuda deploy
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.HETZNER_HOST }}
+          username: deploy
+          key: ${{ secrets.HETZNER_SSH_KEY }}
+          envs: GHCR_TOKEN,GHCR_USER
+          script: |
+            set -e
+            cd /opt/akitflow
+            # GHCR login: GITHUB_TOKEN (otomatik doner, ekstra secret yok)
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            # En guncel image'lari cek, ardindan degisenleri yeniden baslat
+            docker compose -f docker-compose.prod.yml --env-file .env.prod pull
+            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+            # Eskimis (dangling) image'lari sil -> disk dolmasin
+            docker image prune -f
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}

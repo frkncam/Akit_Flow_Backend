@@ -11,6 +11,8 @@ logs/
 
 # Environment (contains secrets)
 .env
+.env.prod
+.env.*.local
 
 # Cryptographic keys
 *.pem
