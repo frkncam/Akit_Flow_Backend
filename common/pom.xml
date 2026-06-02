@@ -89,6 +89,18 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <!-- Distributed tracing: her servise traceId basar + Tempo'ya OTLP ile gonderir.
+             compile scope (provided DEGIL) → common'a bagimli 7 servise runtime'da gecsin.
+             Surumler spring-boot-starter-parent BOM'undan gelir. -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-otel</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-otlp</artifactId>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>

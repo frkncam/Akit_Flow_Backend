@@ -13,6 +13,9 @@ x-app-common: &app-common
   environment: &app-env
     SPRING_PROFILES_ACTIVE: docker
     EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    # Distributed tracing → Tempo'ya OTLP. Dusuk trafik: butun istekleri ornekle (1.0).
+    MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
+    MANAGEMENT_OTLP_TRACING_ENDPOINT: http://tempo:4318/v1/traces
 
 x-db-env: &db-env
   SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-akitflow}
@@ -106,6 +109,39 @@ services:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
     mem_limit: 128m
+
+  # ============ TRACING (gozlemlenebilirlik / katman 07) ============
+  # Servisler -> Tempo (OTLP 4318) -> Grafana (gorsel selale).
+  # Ikisi de sadece ic ag; Grafana'ya nginx /grafana ile disaridan erisilir.
+  tempo:
+    image: grafana/tempo:2.6.1
+    container_name: akitflow-tempo
+    restart: unless-stopped
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo_data:/var/tempo
+    # ports: YOK — 3200/4318/4317 sadece ic ag
+    mem_limit: 320m
+
+  grafana:
+    image: grafana/grafana:11.3.1
+    container_name: akitflow-grafana
+    restart: unless-stopped
+    depends_on:
+      - tempo
+    ports:
+      - "127.0.0.1:3001:3000"   # sadece localhost; nginx /grafana buraya proxy yapacak
+    environment:
+      GF_SERVER_ROOT_URL: https://muhur.duckdns.org/grafana
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    mem_limit: 256m
 
   # ============ EUREKA (servis kesfi) ============
   eureka-server:
@@ -269,3 +305,5 @@ volumes:
   postgres_data:
   rabbitmq_data:
   minio_data:
+  tempo_data:
+  grafana_data:
