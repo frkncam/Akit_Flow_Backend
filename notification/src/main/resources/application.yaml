@@ -36,9 +36,10 @@
   mail:
     host: localhost
     port: 1025
+    # Dev: Mailpit (auth/tls kapali). Prod: Brevo SMTP -> compose env ile auth/tls=true.
     properties:
-      mail.smtp.auth: false
-      mail.smtp.starttls.enable: false
+      mail.smtp.auth: ${MAIL_SMTP_AUTH:false}
+      mail.smtp.starttls.enable: ${MAIL_SMTP_STARTTLS:false}
 
   thymeleaf:
     prefix: classpath:/templates/

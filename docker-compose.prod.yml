@@ -193,6 +193,8 @@ services:
       # JWT anahtarlari image'da YOK (gitignore'lu *.pem). Disaridan mount edip file: ile okutuyoruz.
       AUTH_PRIVATE_KEY_PATH: file:/keys/private.pem
       AUTH_PUBLIC_KEY_PATH: file:/keys/public.pem
+      # Davet e-postasindaki link prod adresine (yoksa localhost:3000 kirik olur)
+      APP_INVITE_BASE_URL: https://muhur.duckdns.org/invite/accept
     volumes:
       - ./keys:/keys:ro
     depends_on:
@@ -228,7 +230,19 @@ services:
     container_name: akitflow-notification
     environment:
       <<: [*app-env, *db-env]
-      SPRING_MAIL_HOST: mailpit
+      # Gercek mail: SMTP relay (Mailpit yerine). Varsayilan Gmail SMTP.
+      # Provider degistirmek icin .env.prod'da SMTP_HOST/SMTP_PORT override edilebilir.
+      # Gizli kimlik bilgileri (.env.prod): SMTP_USERNAME, SMTP_PASSWORD, MAIL_FROM.
+      SPRING_MAIL_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SPRING_MAIL_PORT: "${SMTP_PORT:-587}"
+      SPRING_MAIL_USERNAME: ${SMTP_USERNAME}
+      SPRING_MAIL_PASSWORD: ${SMTP_PASSWORD}
+      MAIL_SMTP_AUTH: "true"
+      MAIL_SMTP_STARTTLS: "true"
+      APP_MAIL_FROM: ${MAIL_FROM}
+      # E-posta icindeki linkler prod adresine isaret etmeli (yoksa localhost:3000 kirik gelir)
+      APP_APP_BASE_URL: https://muhur.duckdns.org
+      APP_SIGN_BASE_URL: https://muhur.duckdns.org/sign
     depends_on:
       postgres:
         condition: service_healthy
