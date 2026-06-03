@@ -29,3 +29,19 @@ scrape_configs:
       # stdout/stderr ayrimi
       - source_labels: ['__meta_docker_container_log_stream']
         target_label: stream
+
+  # nginx access log (host'ta calisir; backend'e ULASMAYAN istekler dahil HER istek).
+  # Sadece prod'da var (/var/log/nginx mount'u prod compose'da); dev'de dosya yok -> sessizce atlanir.
+  - job_name: nginx
+    static_configs:
+      - targets: ['localhost']
+        labels:
+          job: nginx
+          __path__: /var/log/nginx/access.log
+    pipeline_stages:
+      # combined format: IP - - [time] "METHOD path HTTP" status bytes "ref" "ua"
+      - regex:
+          expression: '^(?P<remote>\S+) \S+ \S+ \[[^\]]+\] "(?P<method>\S+) (?P<path>\S+)[^"]*" (?P<status>\d{3})'
+      - labels:
+          method:
+          status:

@@ -154,6 +154,7 @@ services:
     volumes:
       - ./promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro   # container loglarini Docker API ile okur
+      - /var/log/nginx:/var/log/nginx:ro               # nginx access log (her istek, reddedilenler dahil)
       - promtail_data:/promtail
     depends_on:
       - loki
