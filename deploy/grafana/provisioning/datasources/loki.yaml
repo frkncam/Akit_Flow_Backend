@@ -1,0 +1,20 @@
+# Grafana datasource — Loki (log deposu) + log->trace korelasyonu (derivedFields).
+# Konum (sunucu): /opt/akitflow/grafana/provisioning/datasources/loki.yaml
+# Spring log satirindaki [traceId,spanId]'den traceId yakalanir -> Tempo trace'ine link.
+apiVersion: 1
+
+datasources:
+  - name: Loki
+    type: loki
+    uid: loki
+    access: proxy
+    url: http://loki:3100
+    editable: false
+    jsonData:
+      derivedFields:
+        - name: TraceID
+          matcherType: regex
+          matcherRegex: '\[([0-9a-f]{32}),[0-9a-f]{16}\]'
+          url: '$${__value.raw}'
+          datasourceUid: tempo
+          urlDisplayLabel: 'Trace: $${__value.raw}'

@@ -114,6 +114,29 @@ services:
     volumes:
       - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
       - grafana_data:/var/lib/grafana
+
+  loki:
+    image: grafana/loki:3.2.1
+    container_name: akitflow-loki
+    restart: unless-stopped
+    command: ["-config.file=/etc/loki/loki-config.yaml"]
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./deploy/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki_data:/loki
+
+  promtail:
+    image: grafana/promtail:3.2.1
+    container_name: akitflow-promtail
+    restart: unless-stopped
+    command: ["-config.file=/etc/promtail/promtail-config.yaml"]
+    volumes:
+      - ./deploy/promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - promtail_data:/promtail
+    depends_on:
+      - loki
 #
 #  eureka-server:
 #    build:
@@ -306,3 +329,5 @@ volumes:
   minio_data:
   tempo_data:
   grafana_data:
+  loki_data:
+  promtail_data:
