@@ -1,0 +1,35 @@
+# Grafana Tempo — tek-binary (monolithic) trace deposu.
+# Servisler OTLP ile buraya iz gonderir; Grafana buradan okur.
+# Konum (sunucu): /opt/akitflow/tempo/tempo.yaml  → container'da /etc/tempo/tempo.yaml
+# Veri: tempo_data volume → /var/tempo
+
+server:
+  http_listen_port: 3200          # Grafana bu porttan sorgular
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        http:
+          endpoint: 0.0.0.0:4318  # servisler buraya gonderir (MANAGEMENT_OTLP_TRACING_ENDPOINT)
+        grpc:
+          endpoint: 0.0.0.0:4317
+
+ingester:
+  max_block_duration: 5m          # kucuk sistem: blogu cabuk kapat
+
+compactor:
+  compaction:
+    block_retention: 48h          # izleri 2 gun tut, sonra sil (disk/RAM yalin kalsin)
+
+storage:
+  trace:
+    backend: local                # ayri obje depo yok; yerel disk
+    wal:
+      path: /var/tempo/wal
+    local:
+      path: /var/tempo/blocks
+
+# Tek kullaniciyiz; gercek auth Grafana + nginx katmaninda.
+usage_report:
+  reporting_enabled: false
