@@ -84,6 +84,9 @@
               - "http://localhost:3000"
               - "http://localhost:19006"
               - "http://localhost:8081"
+              # Prod (ayni origin'den gelse de tarayici Origin header'i gonderiyor;
+              # listede olmazsa gateway "Invalid CORS request" -> 403). Domain degisirse env ile gec.
+              - "${APP_CORS_PROD_ORIGIN:https://muhur.duckdns.org}"
             allowedMethods: "*"
             allowedHeaders: "*"
             allowCredentials: true
