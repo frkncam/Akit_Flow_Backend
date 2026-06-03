@@ -1,11 +1,20 @@
-# Grafana datasource provisioning — Tempo'yu otomatik bagla (elle ekleme yok).
+# Grafana datasource — Tempo (trace deposu) + trace->logs korelasyonu (Loki'ye).
 # Konum (sunucu): /opt/akitflow/grafana/provisioning/datasources/tempo.yaml
 apiVersion: 1
 
 datasources:
   - name: Tempo
     type: tempo
+    uid: tempo
     access: proxy
     url: http://tempo:3200      # docker ic ag: tempo servisi
     isDefault: true
     editable: false
+    jsonData:
+      # Bir trace span'inden o trace'in loglarina atla (Loki'de traceId ile filtrele)
+      tracesToLogsV2:
+        datasourceUid: loki
+        filterByTraceID: true
+        filterBySpanID: false
+        spanStartTimeShift: '-5m'
+        spanEndTimeShift: '5m'

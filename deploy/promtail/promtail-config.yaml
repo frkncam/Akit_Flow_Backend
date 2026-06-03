@@ -1,0 +1,31 @@
+# Promtail — Docker container loglarini Docker API (socket) ile okur, Loki'ye gonderir.
+# Konum (sunucu): /opt/akitflow/promtail/promtail-config.yaml -> /etc/promtail/promtail-config.yaml
+# Sadece akitflow-* container'lari toplanir; 'container' label'i = container adi.
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: warn
+
+positions:
+  filename: /promtail/positions.yaml   # promtail_data volume
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 15s
+    relabel_configs:
+      # sadece akitflow-* container'lari
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(akitflow-.*)'
+        action: keep
+      # container label'i = container adi (bas slash'i at)
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: container
+      # stdout/stderr ayrimi
+      - source_labels: ['__meta_docker_container_log_stream']
+        target_label: stream

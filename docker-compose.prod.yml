@@ -45,7 +45,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    mem_limit: 512m
+    mem_limit: 320m
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -62,7 +62,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    mem_limit: 512m
+    mem_limit: 320m
 
   minio:
     image: minio/minio:latest
@@ -98,17 +98,8 @@ services:
       echo 'MinIO bootstrap complete';
       "
 
-  mailpit:
-    image: axllent/mailpit:latest
-    container_name: akitflow-mailpit
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:8025:8025"   # Web UI sadece localhost (SSH tunnel ile bakilir, internete kapali)
-    environment:
-      MP_MAX_MESSAGES: 5000
-      MP_SMTP_AUTH_ACCEPT_ANY: 1
-      MP_SMTP_AUTH_ALLOW_INSECURE: 1
-    mem_limit: 128m
+  # mailpit: prod'dan kaldirildi — notification artik gercek SMTP (Gmail) kullaniyor.
+  # (Dev'de docker-compose.yml'de mailpit hala var.)
 
   # ============ TRACING (gozlemlenebilirlik / katman 07) ============
   # Servisler -> Tempo (OTLP 4318) -> Grafana (gorsel selale).
@@ -122,7 +113,7 @@ services:
       - ./tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
       - tempo_data:/var/tempo
     # ports: YOK — 3200/4318/4317 sadece ic ag
-    mem_limit: 320m
+    mem_limit: 448m
 
   grafana:
     image: grafana/grafana:11.3.1
@@ -142,6 +133,31 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - grafana_data:/var/lib/grafana
     mem_limit: 256m
+
+  # --- LOGS: Loki + Promtail (log toplama; traceId ile trace'e baglanir) ---
+  loki:
+    image: grafana/loki:3.2.1
+    container_name: akitflow-loki
+    restart: unless-stopped
+    command: ["-config.file=/etc/loki/loki-config.yaml"]
+    volumes:
+      - ./loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki_data:/loki
+    # ports: YOK — 3100 sadece ic ag
+    mem_limit: 256m
+
+  promtail:
+    image: grafana/promtail:3.2.1
+    container_name: akitflow-promtail
+    restart: unless-stopped
+    command: ["-config.file=/etc/promtail/promtail-config.yaml"]
+    volumes:
+      - ./promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro   # container loglarini Docker API ile okur
+      - promtail_data:/promtail
+    depends_on:
+      - loki
+    mem_limit: 128m
 
   # ============ EUREKA (servis kesfi) ============
   eureka-server:
@@ -204,7 +220,7 @@ services:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
-    mem_limit: 600m
+    mem_limit: 512m
 
   contract:
     <<: *app-common
@@ -321,3 +337,5 @@ volumes:
   minio_data:
   tempo_data:
   grafana_data:
+  loki_data:
+  promtail_data:
