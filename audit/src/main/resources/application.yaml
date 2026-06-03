@@ -48,6 +48,14 @@ eureka:
     prefer-ip-address: true
 
 management:
+  # Distributed tracing → OTLP (Tempo). Dev varsayilan localhost:4318;
+  # prod'da compose env (MANAGEMENT_OTLP_TRACING_ENDPOINT=http://tempo:4318) override eder.
+  tracing:
+    sampling:
+      probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:1.0}
+  otlp:
+    tracing:
+      endpoint: ${MANAGEMENT_OTLP_TRACING_ENDPOINT:http://localhost:4318/v1/traces}
   endpoint:
     health:
       probes:
