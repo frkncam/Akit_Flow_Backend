@@ -94,4 +94,31 @@ public class Signature implements TenantScoped {
     @Column(name = "signature_metadata", columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
     private String signatureMetadata;
+
+    @Column(name = "document_hash", length = 64)
+    private String documentHash;
+
+    @Column(name = "otp_hash", length = 128)
+    private String otpHash;
+
+    @Column(name = "otp_expires_at")
+    private Instant otpExpiresAt;
+
+    @Column(name = "otp_attempts")
+    private Integer otpAttempts;
+
+    @Column(name = "otp_verified_at")
+    private Instant otpVerifiedAt;
+
+    @Column(name = "signer_ip", length = 64)
+    private String signerIp;
+
+    @Column(name = "signer_user_agent", length = 512)
+    private String signerUserAgent;
+
+    @Column(name = "consent_accepted_at")
+    private Instant consentAcceptedAt;
+
+    @Column(name = "tsa_time")
+    private Instant tsaTime;
 }

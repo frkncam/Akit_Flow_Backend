@@ -12,5 +12,7 @@ public record SignatureViewResponse(
         String signedPdfUrl,
         Instant expiresAt,
         SignatureStatus status,
-        String signatureMetadata
+        String signatureMetadata,
+        boolean otpRequired,
+        boolean otpVerified
 ) {}

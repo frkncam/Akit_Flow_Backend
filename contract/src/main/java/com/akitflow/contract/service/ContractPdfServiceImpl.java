@@ -51,7 +51,8 @@ public class ContractPdfServiceImpl implements ContractPdfService {
 
         Contract contract = contractRepository.findByIdAndOrganizationId(contractId, orgId)
                 .orElseThrow(() -> new ResourceNotFoundException("Contract not found: id=" + contractId));
-        TemplateDto template = templateClient.getTemplate(templateId, orgId);
+        TemplateDto template = templateClient.getTemplate(
+                templateId, user.userId(), orgId, user.email(), user.role());
         if (template == null) {
             throw new ResourceNotFoundException("Template not found: id=" + templateId);
         }

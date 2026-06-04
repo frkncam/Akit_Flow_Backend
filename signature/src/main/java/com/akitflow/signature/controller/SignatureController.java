@@ -6,12 +6,16 @@ import com.akitflow.common.query.CommonPredicate;
 import com.akitflow.common.security.HeaderPrincipal;
 import com.akitflow.common.web.PageResponse;
 import com.akitflow.signature.domain.Signature;
+import com.akitflow.signature.dto.request.OtpVerifyRequest;
+import com.akitflow.signature.dto.request.SignatureAcceptRequest;
 import com.akitflow.signature.dto.request.SignatureRejectRequest;
 import com.akitflow.signature.dto.response.SignatureViewResponse;
 import com.akitflow.signature.service.SignatureDecisionService;
+import com.akitflow.signature.service.SignatureEvidence;
 import com.akitflow.signature.service.SignaturePublicViewService;
 import com.akitflow.signature.service.SignatureRequestService;
 import com.querydsl.core.types.Predicate;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -55,8 +59,10 @@ public class SignatureController {
     }
 
     @PostMapping("/{token}/accept")
-    public ResponseEntity<Void> accept(@PathVariable String token) {
-        decisionService.accept(token);
+    public ResponseEntity<Void> accept(@PathVariable String token,
+                                       @RequestBody(required = false) SignatureAcceptRequest body,
+                                       HttpServletRequest http) {
+        decisionService.accept(token, PublicSignatureController.toEvidence(body, http));
         return ResponseEntity.noContent().build();
     }
 
@@ -64,6 +70,19 @@ public class SignatureController {
     public ResponseEntity<Void> reject(@PathVariable String token,
                                        @RequestBody(required = false) SignatureRejectRequest body) {
         decisionService.reject(token, body != null ? body.reason() : null);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{token}/otp/request")
+    public ResponseEntity<Void> requestOtp(@PathVariable String token) {
+        decisionService.requestOtp(token);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{token}/otp/verify")
+    public ResponseEntity<Void> verifyOtp(@PathVariable String token,
+                                          @RequestBody OtpVerifyRequest body) {
+        decisionService.verifyOtp(token, body.code());
         return ResponseEntity.noContent().build();
     }
 }

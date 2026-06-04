@@ -121,7 +121,23 @@
       "Bash(gh auth *)",
       "Bash(gh repo *)",
       "PowerShell(docker push *)",
-      "PowerShell(docker pull *)"
+      "PowerShell(docker pull *)",
+      "Bash(DB_PASSWORD=x RABBITMQ_PASSWORD=x GRAFANA_ADMIN_PASSWORD=x SMTP_USERNAME=x SMTP_PASSWORD=x MAIL_FROM=a@b.c docker compose -f docker-compose.prod.yml config -q)",
+      "Bash(DB_PASSWORD=x RABBITMQ_PASSWORD=x GRAFANA_ADMIN_PASSWORD=x SMTP_USERNAME=brevo_login SMTP_PASSWORD=secret MAIL_FROM=furkancamsos@gmail.com docker compose -f docker-compose.prod.yml config)",
+      "Bash(ssh *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} \" --max-time 8 https://muhur.duckdns.org/actuator/health)",
+      "Bash(curl -s -o /dev/null -w \"/grafana/api/health -> %{http_code}\\\\n\" --max-time 8 https://muhur.duckdns.org/grafana/api/health)",
+      "Bash(curl -s -o /dev/null --max-time 8 https://muhur.duckdns.org/actuator/health)",
+      "Bash(curl -s -o /dev/null -w \"POST register \\(Origin=muhur\\) -> %{http_code}\\\\n\" --max-time 12 -X POST \"https://muhur.duckdns.org/api/v1/auth/register\" -H \"Content-Type: application/json\" -H \"Origin: https://muhur.duckdns.org\" -d '{\"user\":{}}')",
+      "Bash(curl -s -o /dev/null -w \"POST register \\(Origin=localhost:3000\\) -> %{http_code}\\\\n\" --max-time 12 -X POST \"https://muhur.duckdns.org/api/v1/auth/register\" -H \"Content-Type: application/json\" -H \"Origin: http://localhost:3000\" -d '{\"user\":{}}')",
+      "Bash(curl -s -o /dev/null -w \"POST register \\(Origin yok\\) -> %{http_code}\\\\n\" --max-time 12 -X POST \"https://muhur.duckdns.org/api/v1/auth/register\" -H \"Content-Type: application/json\" -d '{\"user\":{}}')",
+      "Bash(DB_PASSWORD=x RABBITMQ_PASSWORD=x GRAFANA_ADMIN_PASSWORD=x SMTP_USERNAME=u SMTP_PASSWORD=p MAIL_FROM=a@b.c docker compose -f docker-compose.prod.yml config -q)",
+      "Bash(scp -i ~/.ssh/akitflow_deploy -o BatchMode=yes deploy/promtail/promtail-config.yaml deploy@91.151.88.140:/opt/akitflow/promtail/promtail-config.yaml)",
+      "Bash(curl -s -o /dev/null -w \"kotu-origin POST -> %{http_code}\\\\n\" --max-time 8 -X POST \"https://muhur.duckdns.org/api/v1/auth/register\" -H \"Origin: https://evil.example.com\" -H \"Content-Type: application/json\" -d '{\"user\":{}}')",
+      "Bash(curl -s -o /dev/null -w \"health -> %{http_code}\\\\n\" --max-time 8 https://muhur.duckdns.org/actuator/health)",
+      "Bash(curl -s -o /dev/null -w \"olmayan-yol -> %{http_code}\\\\n\" --max-time 8 https://muhur.duckdns.org/api/v1/yok)",
+      "Bash(docker exec akitflow-postgres *)",
+      "Bash(docker exec *)"
     ]
   }
 }

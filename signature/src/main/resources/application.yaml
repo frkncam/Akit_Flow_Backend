@@ -80,6 +80,18 @@ app:
       label-en: "DIGITALLY SIGNED"
     token:
       validity-days: 7
+    otp:
+      length: 6
+      ttl-minutes: 5
+      max-attempts: 5
+      verification-window-minutes: 15
+      resend-interval-seconds: 60
+    tsa:
+      enabled: ${SIGNATURE_TSA_ENABLED:true}
+      url: ${SIGNATURE_TSA_URL:http://timestamp.digicert.com}
+      timeout-seconds: 10
+    consent:
+      text: "Bu belgeyi okudum ve elektronik olarak imzalamayı kabul ediyorum."
 
 logging:
   level:

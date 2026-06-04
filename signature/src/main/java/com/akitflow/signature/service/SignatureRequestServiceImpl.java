@@ -6,6 +6,7 @@ import com.akitflow.signature.config.AppProperties;
 import com.akitflow.signature.provider.ESignatureProvider;
 import com.akitflow.signature.provider.ProviderSignatureResult;
 import com.akitflow.signature.provider.SignerInfo;
+import com.akitflow.signature.util.DocumentHasher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,12 +34,13 @@ public class SignatureRequestServiceImpl implements SignatureRequestService {
     private SignatureSetup prepare(BatchSignatureRequest request, Long organizationId, Long actorId) {
         byte[] pdf = minioService.download(request.fileStorageKey());
         Duration validity = Duration.ofDays(appProperties.signature().token().validityDays());
+        String documentHash = DocumentHasher.sha256Hex(pdf);
 
         List<SignerInfo> signers = request.signers().stream()
                 .map(s -> new SignerInfo(s.name(), s.email()))
                 .toList();
 
-        return new SignatureSetup(request, organizationId, actorId, pdf, signers, validity);
+        return new SignatureSetup(request, organizationId, actorId, pdf, documentHash, signers, validity);
     }
 
     public record SignatureSetup(
@@ -46,6 +48,7 @@ public class SignatureRequestServiceImpl implements SignatureRequestService {
             Long organizationId,
             Long actorId,
             byte[] pdf,
+            String documentHash,
             List<SignerInfo> signers,
             Duration validity
     ) {

@@ -38,6 +38,10 @@ public class SignaturePublicViewServiceImpl implements SignaturePublicViewServic
         String signedPdfUrl = sig.getSignedFileStorageKey() != null
                 ? minioService.presignedGetUrl(sig.getSignedFileStorageKey())
                 : null;
+
+        boolean otpRequired = sig.getStatus() == com.akitflow.signature.domain.enums.SignatureStatus.PENDING;
+        boolean otpVerified = sig.getOtpVerifiedAt() != null;
+
         return new SignatureViewResponse(
                 sig.getContractTitle(),
                 sig.getSignerName(),
@@ -46,7 +50,9 @@ public class SignaturePublicViewServiceImpl implements SignaturePublicViewServic
                 signedPdfUrl,
                 sig.getExpiresAt(),
                 sig.getStatus(),
-                sig.getSignatureMetadata()
+                sig.getSignatureMetadata(),
+                otpRequired,
+                otpVerified
         );
     }
 

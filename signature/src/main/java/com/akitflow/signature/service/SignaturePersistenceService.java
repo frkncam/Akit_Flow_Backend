@@ -54,6 +54,7 @@ public class SignaturePersistenceService {
                         .externalRef(providerRes.signerExternalRefs().get(s.email()))
                         .expiresAt(expiresAt)
                         .batchId(batchId)
+                        .documentHash(setup.documentHash())
                         .build())
                 .toList();
         signatureRepository.saveAll(created);
