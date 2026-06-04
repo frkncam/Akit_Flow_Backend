@@ -60,4 +60,4 @@ management:
 
 logging:
   level:
-    com.akitflow.workflow: DEBUG
+    com.muhur.workflow: DEBUG

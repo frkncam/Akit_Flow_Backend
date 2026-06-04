@@ -30,6 +30,10 @@
           uri: lb://audit-service
           predicates:
             - Path=/api/v1/audit/**
+        - id: ai-route
+          uri: lb://ai-service
+          predicates:
+            - Path=/api/v1/ai/**
         - id: workflow-route
           uri: lb://workflow-service
           predicates:
@@ -69,6 +73,12 @@
           uri: lb://audit-service
           predicates:
             - Path=/v3/api-docs/audit
+          filters:
+            - SetPath=/v3/api-docs
+        - id: ai-api-docs
+          uri: lb://ai-service
+          predicates:
+            - Path=/v3/api-docs/ai
           filters:
             - SetPath=/v3/api-docs
         - id: workflow-api-docs
@@ -151,6 +161,8 @@ springdoc:
         url: /v3/api-docs/notification
       - name: Audit Service
         url: /v3/api-docs/audit
+      - name: AI Service
+        url: /v3/api-docs/ai
       - name: Workflow Service
         url: /v3/api-docs/workflow
     operations-sorter: alpha
@@ -160,4 +172,4 @@ springdoc:
 logging:
   level:
     org.springframework.cloud.gateway: INFO
-    com.akitflow.gateway: DEBUG
+    com.muhur.gateway: DEBUG

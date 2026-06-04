@@ -60,4 +60,4 @@ management:
 
 logging:
   level:
-    com.akitflow.template: DEBUG
+    com.muhur.template: DEBUG

@@ -1,4 +1,4 @@
-# Konum: AkitFlow_Backend/.dockerignore
+# Konum: Mühür_Backend/.dockerignore
 **/target/
 .git/
 .github/

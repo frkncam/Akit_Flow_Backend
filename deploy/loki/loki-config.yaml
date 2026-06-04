@@ -1,6 +1,6 @@
 # Grafana Loki — tek-binary (monolithic) log deposu.
 # Promtail buraya log gonderir; Grafana buradan okur.
-# Konum (sunucu): /opt/akitflow/loki/loki-config.yaml  -> container /etc/loki/loki-config.yaml
+# Konum (sunucu): /opt/muhur/loki/loki-config.yaml  -> container /etc/loki/loki-config.yaml
 # Veri: loki_data volume -> /loki
 auth_enabled: false
 

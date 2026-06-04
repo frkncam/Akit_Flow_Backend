@@ -1,5 +1,5 @@
 # Grafana datasource — Tempo (trace deposu) + trace->logs korelasyonu (Loki'ye).
-# Konum (sunucu): /opt/akitflow/grafana/provisioning/datasources/tempo.yaml
+# Konum (sunucu): /opt/muhur/grafana/provisioning/datasources/tempo.yaml
 apiVersion: 1
 
 datasources:
