@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# AkitFlow - Tum Modulleri Build Scripti (Bash)
+# Mühür - Tum Modulleri Build Scripti (Bash)
 # =============================================================================
 # 1. Tum modullerde mvn clean
 # 2. common modulunde mvn clean install
@@ -17,6 +17,7 @@ COMMON_MODULE="common"
 SERVICE_MODULES=(
     "eureka-server"
     "api-gateway"
+    "ai-service"
     "auth"
     "notification"
     "audit"

@@ -1,9 +1,9 @@
 {
   "info": {
-    "name": "AkitFlow - Backend APIs",
-    "description": "AkitFlow tüm backend servisleri için Postman koleksiyonu. Tüm istekler api-gateway (8080) üzerinden gider. Gateway JWT'yi doğrular, X-User-Id/X-Org-Id header'larını downstream servislere geçirir. Servisler: auth(8081), notification(8082), contract(8083), template(8086), signature(8087), workflow(8088), audit(8089).",
+    "name": "Mühür - Backend APIs",
+    "description": "Mühür tüm backend servisleri için Postman koleksiyonu. Tüm istekler api-gateway (8080) üzerinden gider. Gateway JWT'yi doğrular, X-User-Id/X-Org-Id header'larını downstream servislere geçirir. Servisler: auth(8081), notification(8082), contract(8083), template(8086), signature(8087), workflow(8088), audit(8089).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_postman_id": "a1b2c3d4-akitflow-backend-0002"
+    "_postman_id": "a1b2c3d4-muhur-backend-0002"
   },
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:8080", "type": "string", "description": "Gateway entry point" },

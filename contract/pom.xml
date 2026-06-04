@@ -8,7 +8,7 @@
 		<version>3.5.14</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.akitflow</groupId>
+	<groupId>com.muhur</groupId>
 	<artifactId>contract</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name/>
@@ -34,13 +34,13 @@
 		<minio.version>8.5.14</minio.version>
 		<openhtmltopdf.version>1.0.10</openhtmltopdf.version>
 		<springdoc.version>2.8.6</springdoc.version>
-		<akitflow-common.version>1.0.0</akitflow-common.version>
+		<muhur-common.version>1.0.0</muhur-common.version>
 	</properties>
 	<dependencies>
 		<dependency>
-			<groupId>com.akitflow</groupId>
+			<groupId>com.muhur</groupId>
 			<artifactId>common</artifactId>
-			<version>${akitflow-common.version}</version>
+			<version>${muhur-common.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

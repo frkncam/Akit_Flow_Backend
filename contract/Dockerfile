@@ -7,7 +7,7 @@ WORKDIR /workspace
 COPY common/pom.xml common/pom.xml
 COPY contract/pom.xml contract/pom.xml
 
-# 2) common'ı yerel ~/.m2'ye kur (servis 'com.akitflow:common:1.0.0'a bağlı, reactor yok)
+# 2) common'ı yerel ~/.m2'ye kur (servis 'com.muhur:common:1.0.0'a bağlı, reactor yok)
 COPY common/src common/src
 RUN mvn -B -ntp -f common/pom.xml install -DskipTests
 

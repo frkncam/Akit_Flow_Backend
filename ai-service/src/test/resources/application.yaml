@@ -1,0 +1,48 @@
+# Test configuration for ai-service integration tests
+spring:
+  datasource:
+    url: jdbc:h2:mem:ai;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;INIT=CREATE SCHEMA IF NOT EXISTS ai_schema
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate.default_schema: ai_schema
+  liquibase:
+    enabled: false
+  # NOT: RabbitAutoConfiguration DISLANMAZ — common'in FailedEventRetryScheduler/
+  # TransactionAwareEventPublisher bean'leri RabbitTemplate ister. Lazy olusturulur,
+  # test publish etmedigi icin broker'a baglanilmaz.
+  rabbitmq:
+    host: localhost
+    port: 5672
+  ai:
+    openai:
+      api-key: test-key
+    # Spring AI'in KENDI retry katmanini test'te kapat — varsayilan 10x exponential backoff,
+    # circuit-breaker testindeki 500'leri dakikalarca uzatiyor. Resilience4j zaten devrede.
+    retry:
+      max-attempts: 1
+
+eureka:
+  client:
+    enabled: false
+
+app:
+  groq:
+    primary-model: llama-3.3-70b-versatile
+    fallback-model: llama-3.1-8b-instant
+  rate-limit:
+    requests-per-hour: 100
+  validation:
+    max-variables: 20
+    min-variables: 3
+    max-body-size-bytes: 102400
+  prompt:
+    default-key: template-generation-v1
+
+logging:
+  level:
+    com.muhur.ai: DEBUG

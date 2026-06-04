@@ -63,7 +63,7 @@ app:
     url: ${MINIO_URL:http://localhost:9000}
     access-key: ${MINIO_ACCESS_KEY:minioadmin}
     secret-key: ${MINIO_SECRET_KEY:minioadmin}
-    bucket: akitflow-contracts
+    bucket: muhur-contracts
     presigned-url-expiry-minutes: 10
   signature:
     certificate:
@@ -95,4 +95,4 @@ app:
 
 logging:
   level:
-    com.akitflow.signature: DEBUG
+    com.muhur.signature: DEBUG

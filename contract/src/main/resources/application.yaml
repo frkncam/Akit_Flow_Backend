@@ -67,7 +67,7 @@ app:
     url: ${MINIO_URL:http://localhost:9000}
     access-key: ${MINIO_ACCESS_KEY:minioadmin}
     secret-key: ${MINIO_SECRET_KEY:minioadmin}
-    bucket: akitflow-contracts
+    bucket: muhur-contracts
     presigned-url-expiry-minutes: 10
   scheduler:
     contract-expiring-cron: "0 0 9 * * *"
@@ -107,4 +107,4 @@ resilience4j:
 
 logging:
   level:
-    com.akitflow.contract: DEBUG
+    com.muhur.contract: DEBUG

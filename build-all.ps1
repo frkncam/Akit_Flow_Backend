@@ -1,5 +1,5 @@
 # =============================================================================
-# AkitFlow - Tum Modulleri Build Scripti
+# Mühür - Tum Modulleri Build Scripti
 # =============================================================================
 # 1. Tum modullerde mvn clean
 # 2. common modulunde mvn clean install

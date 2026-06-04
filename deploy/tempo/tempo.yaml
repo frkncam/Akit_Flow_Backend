@@ -1,6 +1,6 @@
 # Grafana Tempo — tek-binary (monolithic) trace deposu.
 # Servisler OTLP ile buraya iz gonderir; Grafana buradan okur.
-# Konum (sunucu): /opt/akitflow/tempo/tempo.yaml  → container'da /etc/tempo/tempo.yaml
+# Konum (sunucu): /opt/muhur/tempo/tempo.yaml  → container'da /etc/tempo/tempo.yaml
 # Veri: tempo_data volume → /var/tempo
 
 server:

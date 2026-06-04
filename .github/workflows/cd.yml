@@ -29,6 +29,7 @@ jobs:
           - audit
           - template
           - signature
+          - ai-service
           - eureka-server
     name: build-push (${{ matrix.module }})
     steps:

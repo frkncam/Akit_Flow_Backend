@@ -8,24 +8,24 @@
 		<version>3.5.14</version>
 		<relativePath/>
 	</parent>
-	<groupId>com.akitflow</groupId>
+	<groupId>com.muhur</groupId>
 	<artifactId>workflow</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>workflow-service</name>
-	<description>AkitFlow Workflow Service</description>
+	<description>Mühür Workflow Service</description>
 	<properties>
 		<java.version>21</java.version>
 		<spring-cloud.version>2025.0.2</spring-cloud.version>
 		<querydsl.version>5.1.0</querydsl.version>
 		<mapstruct.version>1.6.3</mapstruct.version>
 		<springdoc.version>2.8.6</springdoc.version>
-		<akitflow-common.version>1.0.0</akitflow-common.version>
+		<muhur-common.version>1.0.0</muhur-common.version>
 	</properties>
 	<dependencies>
 		<dependency>
-			<groupId>com.akitflow</groupId>
+			<groupId>com.muhur</groupId>
 			<artifactId>common</artifactId>
-			<version>${akitflow-common.version}</version>
+			<version>${muhur-common.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

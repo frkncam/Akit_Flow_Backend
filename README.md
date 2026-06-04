@@ -1,4 +1,4 @@
-# AkitFlow Backend
+# Mühür Backend
 
 Sözleşme yönetimi ve onay akışı için mikroservis tabanlı backend. Spring Boot 3.5 (Java 21),
 Spring Cloud (Eureka + Gateway), PostgreSQL, RabbitMQ, MinIO.
@@ -100,7 +100,7 @@ gerekmez.
 $services = "eureka-server","api-gateway","auth","notification","contract",
             "template","signature","workflow","audit"
 foreach ($s in $services) {
-  docker build -f "$s/Dockerfile" -t "akitflow/$s:local" .
+  docker build -f "$s/Dockerfile" -t "muhur/$s:local" .
 }
 
 # 2) Altyapı (docker-compose.yml) + uygulamalar (compose.prod.yml) birlikte
@@ -111,7 +111,7 @@ docker compose -f docker-compose.yml -f compose.prod.yml ps
 ```
 
 > **Neden build context repo kökü?** `auth`, `contract` gibi 7 servis ortak `common`
-> artifact'ına (`com.akitflow:common:1.0.0`) bağlı. Multi-stage build, common'ı container
+> artifact'ına (`com.muhur:common:1.0.0`) bağlı. Multi-stage build, common'ı container
 > içinde derleyebilmek için `common/` klasörünü de görmek zorunda — bu yüzden context kök (`.`),
 > Dockerfile ise `-f <servis>/Dockerfile` ile seçilir. (eureka-server ve api-gateway common'a
 > bağlı değil ama tutarlılık için aynı komut kullanılır.)
@@ -119,7 +119,7 @@ docker compose -f docker-compose.yml -f compose.prod.yml ps
 #### Tek servisi build et / yeniden çalıştır
 
 ```powershell
-docker build -f contract/Dockerfile -t akitflow/contract:local .
+docker build -f contract/Dockerfile -t muhur/contract:local .
 docker compose -f docker-compose.yml -f compose.prod.yml up -d contract
 ```
 
@@ -157,7 +157,7 @@ Her servis **multi-stage** build kullanır:
 - Non-root `app` kullanıcısı, `-XX:MaxRAMPercentage=75.0`, `/actuator/health` healthcheck,
   `exec java ...` ile graceful shutdown (SIGTERM doğrudan JVM'e ulaşır).
 
-`compose.prod.yml` image adlarını `${REGISTRY:-akitflow}/<servis>:${TAG:-local}` ile çözer.
+`compose.prod.yml` image adlarını `${REGISTRY:-muhur}/<servis>:${TAG:-local}` ile çözer.
 Registry'ye (GHCR) geçince yalnızca bu iki değişken set edilir:
 
 ```powershell

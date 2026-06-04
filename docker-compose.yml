@@ -2,7 +2,7 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    container_name: akitflow-postgres
+    container_name: muhur-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_NAME:-akitflow}
@@ -21,7 +21,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
-    container_name: akitflow-rabbitmq
+    container_name: muhur-rabbitmq
     restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
@@ -39,7 +39,7 @@ services:
 
   mailpit:
     image: axllent/mailpit:latest
-    container_name: akitflow-mailpit
+    container_name: muhur-mailpit
     restart: unless-stopped
     ports:
       - "1025:1025"   # SMTP
@@ -51,7 +51,7 @@ services:
 
   minio:
     image: minio/minio:latest
-    container_name: akitflow-minio
+    container_name: muhur-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -70,7 +70,7 @@ services:
 
   minio-bootstrap:
     image: minio/mc:latest
-    container_name: akitflow-minio-bootstrap
+    container_name: muhur-minio-bootstrap
     depends_on:
       minio:
         condition: service_healthy
@@ -80,7 +80,7 @@ services:
     entrypoint: >
       /bin/sh -c "
       mc alias set local http://minio:9000 $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY};
-      mc mb -p local/akitflow-contracts || true;
+      mc mb -p local/muhur-contracts || true;
       echo 'MinIO bootstrap complete';
       "
 
@@ -89,7 +89,7 @@ services:
   # Grafana: http://localhost:3001 (login yok, anonim admin).
   tempo:
     image: grafana/tempo:2.6.1
-    container_name: akitflow-tempo
+    container_name: muhur-tempo
     restart: unless-stopped
     command: ["-config.file=/etc/tempo/tempo.yaml"]
     ports:
@@ -101,7 +101,7 @@ services:
 
   grafana:
     image: grafana/grafana:11.3.1
-    container_name: akitflow-grafana
+    container_name: muhur-grafana
     restart: unless-stopped
     depends_on:
       - tempo
@@ -117,7 +117,7 @@ services:
 
   loki:
     image: grafana/loki:3.2.1
-    container_name: akitflow-loki
+    container_name: muhur-loki
     restart: unless-stopped
     command: ["-config.file=/etc/loki/loki-config.yaml"]
     ports:
@@ -128,7 +128,7 @@ services:
 
   promtail:
     image: grafana/promtail:3.2.1
-    container_name: akitflow-promtail
+    container_name: muhur-promtail
     restart: unless-stopped
     command: ["-config.file=/etc/promtail/promtail-config.yaml"]
     volumes:
@@ -142,7 +142,7 @@ services:
 #    build:
 #      context: ./eureka-server
 #      dockerfile: Dockerfile
-#    container_name: akitflow-eureka-server
+#    container_name: muhur-eureka-server
 #    restart: unless-stopped
 #    ports:
 #      - "8761:8761"
@@ -157,7 +157,7 @@ services:
 #    build:
 #      context: ./api-gateway
 #      dockerfile: Dockerfile
-#    container_name: akitflow-api-gateway
+#    container_name: muhur-api-gateway
 #    restart: unless-stopped
 #    ports:
 #      - "8080:8080"
@@ -173,7 +173,7 @@ services:
 #    build:
 #      context: ./auth
 #      dockerfile: Dockerfile
-#    container_name: akitflow-auth
+#    container_name: muhur-auth
 #    restart: unless-stopped
 #    ports:
 #      - "8081:8081"
@@ -194,7 +194,7 @@ services:
 #    build:
 #      context: ./contract
 #      dockerfile: Dockerfile
-#    container_name: akitflow-contract
+#    container_name: muhur-contract
 #    restart: unless-stopped
 #    ports:
 #      - "8083:8083"
@@ -218,7 +218,7 @@ services:
 #    build:
 #      context: ./notification
 #      dockerfile: Dockerfile
-#    container_name: akitflow-notification
+#    container_name: muhur-notification
 #    restart: unless-stopped
 #    ports:
 #      - "8082:8082"
@@ -240,7 +240,7 @@ services:
 #    build:
 #      context: ./template
 #      dockerfile: Dockerfile
-#    container_name: akitflow-template
+#    container_name: muhur-template
 #    restart: unless-stopped
 #    ports:
 #      - "8086:8086"
@@ -261,7 +261,7 @@ services:
 #    build:
 #      context: ./signature
 #      dockerfile: Dockerfile
-#    container_name: akitflow-signature
+#    container_name: muhur-signature
 #    restart: unless-stopped
 #    ports:
 #      - "8087:8087"
@@ -285,7 +285,7 @@ services:
 #    build:
 #      context: ./workflow
 #      dockerfile: Dockerfile
-#    container_name: akitflow-workflow
+#    container_name: muhur-workflow
 #    restart: unless-stopped
 #    ports:
 #      - "8088:8088"
@@ -306,7 +306,7 @@ services:
 #    build:
 #      context: ./audit
 #      dockerfile: Dockerfile
-#    container_name: akitflow-audit
+#    container_name: muhur-audit
 #    restart: unless-stopped
 #    ports:
 #      - "8089:8089"
@@ -315,6 +315,28 @@ services:
 #      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/akitflow
 #      SPRING_RABBITMQ_HOST: rabbitmq
 #      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      rabbitmq:
+#        condition: service_healthy
+#      eureka-server:
+#        condition: service_healthy
+#
+#  ai:
+#    build:
+#      context: .                      # repo koku — common/ COPY edilebilsin diye
+#      dockerfile: ai-service/Dockerfile
+#    container_name: muhur-ai-service
+#    restart: unless-stopped
+#    ports:
+#      - "8085:8085"
+#    environment:
+#      SPRING_PROFILES_ACTIVE: docker
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/akitflow
+#      SPRING_RABBITMQ_HOST: rabbitmq
+#      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+#      GROQ_API_KEY: ${GROQ_API_KEY}   # zorunlu — shell'de export et veya .env'e koy
 #    depends_on:
 #      postgres:
 #        condition: service_healthy

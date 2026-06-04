@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# deploy/setup-server.sh — taze bir Ubuntu 22.04 sunucuyu AkitFlow icin hazirlar.
+# deploy/setup-server.sh — taze bir Ubuntu 22.04 sunucuyu Mühür icin hazirlar.
 #
 # Katman 05'te ELLE yaptigimiz Adim 4-10'un idempotent (tekrar calistirilabilir) hali.
 # Amac: "yeni sunucuda tek komutla tekrarlanabilir kurulum" — DevOps'un temel fikri.

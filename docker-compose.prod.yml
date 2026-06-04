@@ -1,4 +1,4 @@
-# docker-compose.prod.yml — AkitFlow prod (Hetzner sunucu)
+# docker-compose.prod.yml — Mühür prod (Hetzner sunucu)
 # Dev'den FARKLAR:
 #   - build YOK → GHCR'dan hazir image cekilir (image: ghcr.io/frkncam/<modul>:latest)
 #   - altyapi portlari host'a PUBLISH EDILMEZ (Docker ufw'yi deler; sadece ic ag)
@@ -30,7 +30,7 @@ services:
   # ============ ALTYAPI ============
   postgres:
     image: postgres:16-alpine
-    container_name: akitflow-postgres
+    container_name: muhur-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_NAME:-akitflow}
@@ -49,7 +49,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
-    container_name: akitflow-rabbitmq
+    container_name: muhur-rabbitmq
     restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
@@ -66,7 +66,7 @@ services:
 
   minio:
     image: minio/minio:latest
-    container_name: akitflow-minio
+    container_name: muhur-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -84,7 +84,7 @@ services:
 
   minio-bootstrap:
     image: minio/mc:latest
-    container_name: akitflow-minio-bootstrap
+    container_name: muhur-minio-bootstrap
     depends_on:
       minio:
         condition: service_healthy
@@ -94,7 +94,7 @@ services:
     entrypoint: >
       /bin/sh -c "
       mc alias set local http://minio:9000 $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY};
-      mc mb -p local/akitflow-contracts || true;
+      mc mb -p local/muhur-contracts || true;
       echo 'MinIO bootstrap complete';
       "
 
@@ -106,7 +106,7 @@ services:
   # Ikisi de sadece ic ag; Grafana'ya nginx /grafana ile disaridan erisilir.
   tempo:
     image: grafana/tempo:2.6.1
-    container_name: akitflow-tempo
+    container_name: muhur-tempo
     restart: unless-stopped
     command: ["-config.file=/etc/tempo/tempo.yaml"]
     volumes:
@@ -117,7 +117,7 @@ services:
 
   grafana:
     image: grafana/grafana:11.3.1
-    container_name: akitflow-grafana
+    container_name: muhur-grafana
     restart: unless-stopped
     depends_on:
       - tempo
@@ -137,7 +137,7 @@ services:
   # --- LOGS: Loki + Promtail (log toplama; traceId ile trace'e baglanir) ---
   loki:
     image: grafana/loki:3.2.1
-    container_name: akitflow-loki
+    container_name: muhur-loki
     restart: unless-stopped
     command: ["-config.file=/etc/loki/loki-config.yaml"]
     volumes:
@@ -148,7 +148,7 @@ services:
 
   promtail:
     image: grafana/promtail:3.2.1
-    container_name: akitflow-promtail
+    container_name: muhur-promtail
     restart: unless-stopped
     command: ["-config.file=/etc/promtail/promtail-config.yaml"]
     volumes:
@@ -164,7 +164,7 @@ services:
   eureka-server:
     <<: *app-common
     image: ghcr.io/frkncam/eureka-server:latest
-    container_name: akitflow-eureka-server
+    container_name: muhur-eureka-server
     # ports: YOK — ic ag (8761)
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8761/actuator/health"]
@@ -178,7 +178,7 @@ services:
   api-gateway:
     <<: *app-common
     image: ghcr.io/frkncam/api-gateway:latest
-    container_name: akitflow-api-gateway
+    container_name: muhur-api-gateway
     ports:
       - "127.0.0.1:8080:8080"   # sadece localhost; nginx (06) buraya proxy yapacak
     environment:
@@ -194,7 +194,7 @@ services:
   # NEXT_PUBLIC_API_URL image'a build-time bos ("") gomulu -> same-origin (/api -> gateway).
   frontend:
     image: ghcr.io/frkncam/frontend:latest
-    container_name: akitflow-frontend
+    container_name: muhur-frontend
     restart: unless-stopped
     ports:
       - "127.0.0.1:3000:3000"   # sadece localhost; nginx onune gececek
@@ -204,7 +204,7 @@ services:
   auth:
     <<: *app-common
     image: ghcr.io/frkncam/auth:latest
-    container_name: akitflow-auth
+    container_name: muhur-auth
     environment:
       <<: [*app-env, *db-env]
       # JWT anahtarlari image'da YOK (gitignore'lu *.pem). Disaridan mount edip file: ile okutuyoruz.
@@ -226,7 +226,7 @@ services:
   contract:
     <<: *app-common
     image: ghcr.io/frkncam/contract:latest
-    container_name: akitflow-contract
+    container_name: muhur-contract
     environment:
       <<: [*app-env, *db-env]
       APP_MINIO_URL: http://minio:9000
@@ -244,7 +244,7 @@ services:
   notification:
     <<: *app-common
     image: ghcr.io/frkncam/notification:latest
-    container_name: akitflow-notification
+    container_name: muhur-notification
     environment:
       <<: [*app-env, *db-env]
       # Gercek mail: SMTP relay (Mailpit yerine). Varsayilan Gmail SMTP.
@@ -272,7 +272,7 @@ services:
   template:
     <<: *app-common
     image: ghcr.io/frkncam/template:latest
-    container_name: akitflow-template
+    container_name: muhur-template
     environment:
       <<: [*app-env, *db-env]
     depends_on:
@@ -284,10 +284,28 @@ services:
         condition: service_healthy
     mem_limit: 512m
 
+  ai:
+    <<: *app-common
+    image: ghcr.io/frkncam/ai-service:latest
+    container_name: muhur-ai-service
+    environment:
+      <<: [*app-env, *db-env]
+      # Groq LLM anahtari (.env.prod'tan). Yoksa container UP olur ama generate cagrilari 401 doner.
+      GROQ_API_KEY: ${GROQ_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    # NOT: 10. JVM. Deploy oncesi `free -h` ile bos RAM olc; ~600m+ varsa 512m yapilabilir.
+    mem_limit: 384m
+
   signature:
     <<: *app-common
     image: ghcr.io/frkncam/signature:latest
-    container_name: akitflow-signature
+    container_name: muhur-signature
     environment:
       <<: [*app-env, *db-env]
       APP_MINIO_URL: http://minio:9000
@@ -305,7 +323,7 @@ services:
   workflow:
     <<: *app-common
     image: ghcr.io/frkncam/workflow:latest
-    container_name: akitflow-workflow
+    container_name: muhur-workflow
     environment:
       <<: [*app-env, *db-env]
     depends_on:
@@ -320,7 +338,7 @@ services:
   audit:
     <<: *app-common
     image: ghcr.io/frkncam/audit:latest
-    container_name: akitflow-audit
+    container_name: muhur-audit
     environment:
       <<: [*app-env, *db-env]
     depends_on:

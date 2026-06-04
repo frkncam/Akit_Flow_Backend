@@ -137,7 +137,18 @@
       "Bash(curl -s -o /dev/null -w \"health -> %{http_code}\\\\n\" --max-time 8 https://muhur.duckdns.org/actuator/health)",
       "Bash(curl -s -o /dev/null -w \"olmayan-yol -> %{http_code}\\\\n\" --max-time 8 https://muhur.duckdns.org/api/v1/yok)",
       "Bash(docker exec akitflow-postgres *)",
-      "Bash(docker exec *)"
+      "Bash(docker exec *)",
+      "Bash(grep -viE \"[\\\\\\\\/]target[\\\\\\\\/]|[\\\\\\\\/]\\\\.git[\\\\\\\\/]\")",
+      "Bash(grep -vE \"akit-flow[\\\\\\\\/]AkitFlow\")",
+      "Bash(grep -viE \"[\\\\\\\\/]target[\\\\\\\\/]\")",
+      "Bash(grep -viE \"[\\\\\\\\/]\\(target|\\\\.git|\\\\.idea\\)[\\\\\\\\/]\")",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(mv ai-service/src/main/java/com/akitflow ai-service/src/main/java/com/muhur)",
+      "Bash(mv ai-service/src/test/java/com/akitflow ai-service/src/test/java/com/muhur)",
+      "Bash(ls mvnw *)",
+      "Bash(ls pom.xml settings.gradle build.gradle)",
+      "Bash(grep -viE \"[\\\\\\\\/]\\(target|\\\\.git|\\\\.idea\\)[\\\\\\\\/]|settings\\\\.local\\\\.json\")",
+      "Bash(grep -oiE \"[^ \\\\\"\\\\`\\(]*akitflow[^ \\\\\"\\\\`\\),]*\")"
     ]
   }
 }

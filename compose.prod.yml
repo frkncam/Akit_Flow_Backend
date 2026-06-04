@@ -1,12 +1,12 @@
-# Konum: AkitFlow_Backend/compose.prod.yml
+# Konum: Mühür_Backend/compose.prod.yml
 # Image-tabanlı production compose (override pattern).
 # Altyapı docker-compose.yml'den gelir; bu dosya sadece app servislerini ekler.
 # Kullanım: docker compose -f docker-compose.yml -f compose.prod.yml up -d
 services:
 
   eureka-server:
-    image: ${REGISTRY:-akitflow}/eureka-server:${TAG:-local}
-    container_name: akitflow-eureka-server
+    image: ${REGISTRY:-muhur}/eureka-server:${TAG:-local}
+    container_name: muhur-eureka-server
     restart: unless-stopped
     ports: ["8761:8761"]
     healthcheck:
@@ -17,8 +17,8 @@ services:
       start_period: 30s
 
   api-gateway:
-    image: ${REGISTRY:-akitflow}/api-gateway:${TAG:-local}
-    container_name: akitflow-api-gateway
+    image: ${REGISTRY:-muhur}/api-gateway:${TAG:-local}
+    container_name: muhur-api-gateway
     restart: unless-stopped
     ports: ["8080:8080"]
     environment:
@@ -28,8 +28,8 @@ services:
       eureka-server: { condition: service_healthy }
 
   auth:
-    image: ${REGISTRY:-akitflow}/auth:${TAG:-local}
-    container_name: akitflow-auth
+    image: ${REGISTRY:-muhur}/auth:${TAG:-local}
+    container_name: muhur-auth
     restart: unless-stopped
     ports: ["8081:8081"]
     environment:
@@ -42,8 +42,8 @@ services:
       eureka-server: { condition: service_healthy }
 
   notification:
-    image: ${REGISTRY:-akitflow}/notification:${TAG:-local}
-    container_name: akitflow-notification
+    image: ${REGISTRY:-muhur}/notification:${TAG:-local}
+    container_name: muhur-notification
     restart: unless-stopped
     ports: ["8082:8082"]
     environment:
@@ -57,8 +57,8 @@ services:
       eureka-server: { condition: service_healthy }
 
   contract:
-    image: ${REGISTRY:-akitflow}/contract:${TAG:-local}
-    container_name: akitflow-contract
+    image: ${REGISTRY:-muhur}/contract:${TAG:-local}
+    container_name: muhur-contract
     restart: unless-stopped
     ports: ["8083:8083"]
     environment:
@@ -73,8 +73,8 @@ services:
       eureka-server:   { condition: service_healthy }
 
   template:
-    image: ${REGISTRY:-akitflow}/template:${TAG:-local}
-    container_name: akitflow-template
+    image: ${REGISTRY:-muhur}/template:${TAG:-local}
+    container_name: muhur-template
     restart: unless-stopped
     ports: ["8086:8086"]
     environment:
@@ -87,8 +87,8 @@ services:
       eureka-server: { condition: service_healthy }
 
   signature:
-    image: ${REGISTRY:-akitflow}/signature:${TAG:-local}
-    container_name: akitflow-signature
+    image: ${REGISTRY:-muhur}/signature:${TAG:-local}
+    container_name: muhur-signature
     restart: unless-stopped
     ports: ["8087:8087"]
     environment:
@@ -103,8 +103,8 @@ services:
       eureka-server:   { condition: service_healthy }
 
   workflow:
-    image: ${REGISTRY:-akitflow}/workflow:${TAG:-local}
-    container_name: akitflow-workflow
+    image: ${REGISTRY:-muhur}/workflow:${TAG:-local}
+    container_name: muhur-workflow
     restart: unless-stopped
     ports: ["8088:8088"]
     environment:
@@ -117,8 +117,8 @@ services:
       eureka-server: { condition: service_healthy }
 
   audit:
-    image: ${REGISTRY:-akitflow}/audit:${TAG:-local}
-    container_name: akitflow-audit
+    image: ${REGISTRY:-muhur}/audit:${TAG:-local}
+    container_name: muhur-audit
     restart: unless-stopped
     ports: ["8089:8089"]
     environment:
