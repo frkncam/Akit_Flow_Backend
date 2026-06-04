@@ -2,7 +2,9 @@ package com.akitflow.signature.repository;
 
 import com.akitflow.signature.domain.Signature;
 import com.akitflow.signature.domain.enums.SignatureStatus;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.query.Param;
@@ -16,6 +18,10 @@ import java.util.UUID;
 public interface SignatureRepository extends JpaRepository<Signature, Long>, QuerydslPredicateExecutor<Signature> {
 
     Optional<Signature> findByToken(String token);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT s FROM Signature s WHERE s.id = :id")
+    Optional<Signature> findByIdForUpdate(@Param("id") Long id);
 
     List<Signature> findAllByContractIdAndStatus(Long contractId, SignatureStatus status);
 

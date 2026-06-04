@@ -1,15 +1,19 @@
 package com.akitflow.signature.service;
 
 import com.akitflow.signature.SignatureMetadata;
+import com.akitflow.signature.config.AppProperties;
 import com.akitflow.signature.domain.Signature;
 import com.akitflow.signature.domain.enums.SignatureStatus;
 import com.akitflow.common.event.payload.SignatureBatchCompletedPayload;
 import com.akitflow.common.event.payload.SignatureBatchRejectedPayload;
+import com.akitflow.common.event.payload.SignatureOtpRequestedPayload;
 import com.akitflow.signature.event.publisher.SignatureEventPublisher;
+import com.akitflow.signature.exception.ConsentRequiredException;
 import com.akitflow.signature.exception.PdfSigningFailedException;
 import com.akitflow.common.exception.ResourceNotFoundException;
 import com.akitflow.signature.exception.SignatureExpiredException;
 import com.akitflow.signature.repository.SignatureRepository;
+import com.akitflow.signature.util.DocumentHasher;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,17 +36,31 @@ public class SignatureDecisionServiceImpl implements SignatureDecisionService {
     private final ObjectMapper objectMapper;
     private final SignatureEventPublisher eventPublisher;
     private final SignatureBatchEvaluator batchEvaluator;
+    private final OtpService otpService;
+    private final AppProperties appProperties;
 
     @Override
     @Transactional
-    public void accept(String token) {
+    public void accept(String token, SignatureEvidence evidence) {
         Signature sig = loadValidPending(token);
+
+        if (!evidence.consent()) {
+            throw new ConsentRequiredException();
+        }
+
+        otpService.requireFreshlyVerified(sig);
+
+        sig.setSignerIp(evidence.ip());
+        sig.setSignerUserAgent(evidence.userAgent());
+        sig.setConsentAcceptedAt(Instant.now());
+
         SignedPdfResult signed = signPdfOrThrow(sig);
 
         sig.setStatus(SignatureStatus.SIGNED);
         sig.setSignedAt(signed.signedAt());
         sig.setSignedFileStorageKey(signed.storageKey());
         sig.setSignatureMetadata(signed.metadataJson());
+        sig.setTsaTime(signed.tsaTime());
         signatureRepository.save(sig);
 
         SignatureBatchEvaluator.BatchStatus status =
@@ -101,15 +119,69 @@ public class SignatureDecisionServiceImpl implements SignatureDecisionService {
                 contractId, batchId, sig.getSignerEmail());
     }
 
+    @Override
+    @Transactional
+    public void requestOtp(String token) {
+        Signature sig = loadValidPending(token);
+        otpService.ensureResendAllowed(sig);
+        String code = otpService.generateAndStore(sig);
+        signatureRepository.save(sig);
+
+        AppProperties.Signature.Otp otpConfig = appProperties.signature().otp();
+        eventPublisher.publishOtpRequested(
+                sig.getOrganizationId(),
+                null,
+                new SignatureOtpRequestedPayload(
+                        sig.getContractId(),
+                        sig.getContractTitle(),
+                        sig.getSignerName(),
+                        sig.getSignerEmail(),
+                        sig.getToken(),
+                        code,
+                        Instant.now().plusSeconds(otpConfig.ttlMinutes() * 60L)
+                ));
+        log.info("OTP requested for signature id={}, email={}", sig.getId(), sig.getSignerEmail());
+    }
+
+    @Override
+    @Transactional
+    public void verifyOtp(String token, String code) {
+        Signature sig = loadValidPending(token);
+        otpService.verify(sig, code);
+        signatureRepository.save(sig);
+        log.info("OTP verified for signature id={}", sig.getId());
+    }
+
     private SignedPdfResult signPdfOrThrow(Signature sig) {
         CertificateService.CertKeyPair certKey = certificateService
                 .getOrCreateCertificate(sig.getOrganizationId());
 
         byte[] originalPdf = minioService.download(sig.getFileStorageKey());
+
+        String actualHash = DocumentHasher.sha256Hex(originalPdf);
+        if (sig.getDocumentHash() != null && !sig.getDocumentHash().equals(actualHash)) {
+            throw new PdfSigningFailedException("Document changed since request (hash mismatch)", null);
+        }
+
         byte[] signedPdf;
+        PdfSigningService.SignResult signResult;
         try {
-            signedPdf = pdfSigningService.sign(originalPdf, certKey.certificate(),
-                    certKey.privateKey(), sig.getSignerName(), sig.getContractTitle());
+            PdfSigningService.SignContext ctx = new PdfSigningService.SignContext(
+                    sig.getSignerName(),
+                    sig.getContractTitle(),
+                    actualHash,
+                    sig.getSignerEmail(),
+                    sig.getSignerIp(),
+                    sig.getOtpVerifiedAt() != null,
+                    certKey.certificate().getSerialNumber().toString(16),
+                    appProperties.signature().consent().text(),
+                    appProperties.signature().certificate().algorithm()
+            );
+            signResult = pdfSigningService.sign(originalPdf, certKey.certificate(),
+                    certKey.privateKey(), ctx);
+            signedPdf = signResult.pdf();
+        } catch (PdfSigningFailedException e) {
+            throw e;
         } catch (Exception e) {
             throw new PdfSigningFailedException("PDF signing failed: " + e.getMessage(), e);
         }
@@ -121,12 +193,20 @@ public class SignatureDecisionServiceImpl implements SignatureDecisionService {
                 "application/pdf");
 
         Instant now = Instant.now();
+        Instant effectiveTime = signResult.tsaTime() != null ? signResult.tsaTime() : now;
         SignatureMetadata metadata = new SignatureMetadata(
-                now,
+                effectiveTime,
                 sig.getSignerName(),
                 sig.getSignerEmail(),
                 "SHA256withRSA",
-                certKey.certificate().getSerialNumber().toString(16)
+                certKey.certificate().getSerialNumber().toString(16),
+                actualHash,
+                sig.getSignerIp(),
+                sig.getSignerUserAgent(),
+                sig.getOtpVerifiedAt() != null,
+                appProperties.signature().consent().text(),
+                signResult.tsaTime(),
+                signResult.tsaAuthority()
         );
         String metadataJson;
         try {
@@ -136,10 +216,10 @@ public class SignatureDecisionServiceImpl implements SignatureDecisionService {
         }
 
         log.info("PDF signed for signature id={}, storageKey={}", sig.getId(), signedKey);
-        return new SignedPdfResult(now, signedKey, metadataJson);
+        return new SignedPdfResult(now, signedKey, metadataJson, signResult.tsaTime());
     }
 
-    private record SignedPdfResult(Instant signedAt, String storageKey, String metadataJson) {}
+    private record SignedPdfResult(Instant signedAt, String storageKey, String metadataJson, Instant tsaTime) {}
 
     private Signature loadValidPending(String token) {
         Signature sig = signatureRepository.findByToken(token)

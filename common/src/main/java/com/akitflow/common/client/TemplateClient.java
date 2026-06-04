@@ -10,5 +10,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 public interface TemplateClient {
 
     @GetMapping("/api/v1/templates/{id}")
-    TemplateDto getTemplate(@PathVariable Long id, @RequestHeader("X-Org-Id") Long orgId);
+    TemplateDto getTemplate(@PathVariable Long id,
+                            @RequestHeader("X-User-Id") Long userId,
+                            @RequestHeader("X-Org-Id") Long orgId,
+                            @RequestHeader("X-User-Email") String email,
+                            @RequestHeader("X-User-Role") String role);
 }

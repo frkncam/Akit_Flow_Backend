@@ -18,7 +18,10 @@ public record AppProperties(
     public record Signature(
             Certificate certificate,
             Appearance appearance,
-            Token token
+            Token token,
+            Otp otp,
+            Tsa tsa,
+            Consent consent
     ) {
         public record Certificate(
                 int validityYears,
@@ -38,6 +41,24 @@ public record AppProperties(
 
         public record Token(
                 int validityDays
+        ) {}
+
+        public record Otp(
+                int length,
+                int ttlMinutes,
+                int maxAttempts,
+                int verificationWindowMinutes,
+                int resendIntervalSeconds
+        ) {}
+
+        public record Tsa(
+                boolean enabled,
+                String url,
+                int timeoutSeconds
+        ) {}
+
+        public record Consent(
+                String text
         ) {}
     }
 }

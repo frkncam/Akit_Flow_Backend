@@ -39,4 +39,40 @@ public class GlobalExceptionHandler extends BaseExceptionHandler {
                                                             HttpServletRequest request) {
         return build(HttpStatus.FORBIDDEN, "Bu işlem için yetkiniz yok.", request);
     }
+
+    @ExceptionHandler(ConsentRequiredException.class)
+    public ResponseEntity<ErrorResponse> handleConsentRequired(ConsentRequiredException ex,
+                                                                HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(OtpRequiredException.class)
+    public ResponseEntity<ErrorResponse> handleOtpRequired(OtpRequiredException ex,
+                                                            HttpServletRequest request) {
+        return build(HttpStatus.FORBIDDEN, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(OtpInvalidException.class)
+    public ResponseEntity<ErrorResponse> handleOtpInvalid(OtpInvalidException ex,
+                                                           HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(OtpExpiredException.class)
+    public ResponseEntity<ErrorResponse> handleOtpExpired(OtpExpiredException ex,
+                                                           HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(OtpAttemptsExceededException.class)
+    public ResponseEntity<ErrorResponse> handleOtpAttemptsExceeded(OtpAttemptsExceededException ex,
+                                                                    HttpServletRequest request) {
+        return build(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(OtpResendTooSoonException.class)
+    public ResponseEntity<ErrorResponse> handleOtpResendTooSoon(OtpResendTooSoonException ex,
+                                                                 HttpServletRequest request) {
+        return build(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage(), request);
+    }
 }

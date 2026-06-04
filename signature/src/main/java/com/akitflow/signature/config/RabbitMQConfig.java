@@ -17,6 +17,7 @@ public class RabbitMQConfig {
     public static final String RK_SIGNATURE_REQUESTED = "signature.requested";
     public static final String RK_SIGNATURE_BATCH_COMPLETED = "signature.batch.completed";
     public static final String RK_SIGNATURE_BATCH_REJECTED = "signature.batch.rejected";
+    public static final String RK_SIGNATURE_OTP_REQUESTED = "signature.otp.requested";
 
     @Bean
     public TopicExchange signatureExchange() {

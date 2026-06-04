@@ -3,6 +3,7 @@ package com.akitflow.signature.event.publisher;
 import com.akitflow.common.event.DomainEvent;
 import com.akitflow.common.event.payload.SignatureBatchCompletedPayload;
 import com.akitflow.common.event.payload.SignatureBatchRejectedPayload;
+import com.akitflow.common.event.payload.SignatureOtpRequestedPayload;
 import com.akitflow.common.event.payload.SignatureRequestedPayload;
 import com.akitflow.common.messaging.TransactionAwareEventPublisher;
 import com.akitflow.signature.config.RabbitMQConfig;
@@ -27,6 +28,10 @@ public class SignatureEventPublisher {
 
     public void publishBatchRejected(Long organizationId, Long actorId, SignatureBatchRejectedPayload payload) {
         publish(RabbitMQConfig.RK_SIGNATURE_BATCH_REJECTED, organizationId, actorId, payload);
+    }
+
+    public void publishOtpRequested(Long organizationId, Long actorId, SignatureOtpRequestedPayload payload) {
+        publish(RabbitMQConfig.RK_SIGNATURE_OTP_REQUESTED, organizationId, actorId, payload);
     }
 
     private <T> void publish(String routingKey, Long organizationId, Long actorId, T payload) {

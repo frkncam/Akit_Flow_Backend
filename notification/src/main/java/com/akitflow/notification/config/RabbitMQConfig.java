@@ -25,6 +25,7 @@ public class RabbitMQConfig {
     public static final String Q_SIGNATURE_REQUESTED = "notification.signature.requested";
     public static final String Q_SIGNATURE_BATCH_COMPLETED = "notification.signature.batch.completed";
     public static final String Q_SIGNATURE_BATCH_REJECTED = "notification.signature.batch.rejected";
+    public static final String Q_SIGNATURE_OTP_REQUESTED = "notification.signature.otp.requested";
     public static final String Q_WORKFLOW_APPROVAL_REQUESTED = "notification.workflow.approval.requested";
     public static final String Q_WORKFLOW_APPROVAL_REJECTED = "notification.workflow.approval.rejected";
     public static final String Q_WORKFLOW_APPROVED = "notification.workflow.approved";
@@ -130,6 +131,14 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue signatureOtpRequestedQueue() {
+        return QueueBuilder.durable(Q_SIGNATURE_OTP_REQUESTED)
+                .withArgument("x-dead-letter-exchange", DLX)
+                .withArgument("x-dead-letter-routing-key", DLQ_ROUTING_KEY)
+                .build();
+    }
+
+    @Bean
     public Queue workflowApprovalRequestedQueue() {
         return QueueBuilder.durable(Q_WORKFLOW_APPROVAL_REQUESTED)
                 .withArgument("x-dead-letter-exchange", DLX)
@@ -201,6 +210,11 @@ public class RabbitMQConfig {
     @Bean
     public Binding bindSignatureBatchRejected(Queue signatureBatchRejectedQueue, TopicExchange signatureExchange) {
         return BindingBuilder.bind(signatureBatchRejectedQueue).to(signatureExchange).with("signature.batch.rejected");
+    }
+
+    @Bean
+    public Binding bindSignatureOtpRequested(Queue signatureOtpRequestedQueue, TopicExchange signatureExchange) {
+        return BindingBuilder.bind(signatureOtpRequestedQueue).to(signatureExchange).with("signature.otp.requested");
     }
 
     @Bean
