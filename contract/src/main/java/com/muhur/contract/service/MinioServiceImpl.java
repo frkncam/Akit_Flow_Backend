@@ -58,12 +58,18 @@ public class MinioServiceImpl implements MinioService {
     @Override
     public String presignedGetUrl(String key) {
         try {
-            return client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
+            String url = client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
                     .method(Method.GET)
                     .bucket(props.minio().bucket())
                     .object(key)
                     .expiry(props.minio().presignedUrlExpiryMinutes(), TimeUnit.MINUTES)
                     .build());
+            String publicUrl = props.minio().publicUrl();
+            String internalUrl = props.minio().url();
+            if (publicUrl != null && !publicUrl.equals(internalUrl)) {
+                url = url.replace(internalUrl, publicUrl);
+            }
+            return url;
         } catch (Exception e) {
             throw new IllegalStateException("MinIO pre-signed URL üretilemedi: " + e.getMessage(), e);
         }

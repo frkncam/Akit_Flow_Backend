@@ -69,6 +69,7 @@ app:
     secret-key: ${APP_MINIO_SECRET_KEY:minioadmin}
     bucket: muhur-contracts
     presigned-url-expiry-minutes: 10
+    public-url: ${APP_MINIO_PUBLIC_URL:http://localhost:9000}
   scheduler:
     contract-expiring-cron: "0 0 9 * * *"
     contract-expiring-zone: Europe/Istanbul
