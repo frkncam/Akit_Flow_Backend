@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Mühür - Tum Modulleri Build Scripti (Bash)
+# Mühür - Tum Modulleri Build Scripti (Bash, PARALEL + TESTSIZ)
 # =============================================================================
-# 1. Tum modullerde mvn clean
-# 2. common modulunde mvn clean install
-# 3. Diger tum modullerde mvn clean package
+# 1. common modulunde mvn clean install -DskipTests  (BARRIER: digerleri buna bagimli)
+# 2. Diger tum modullerde mvn clean package -DskipTests  -> PARALEL
+#
+# Ortam degiskeni:
+#   MAX_PARALLEL : ayni anda kosacak modul sayisi (varsayilan: CPU cekirdek sayisi)
+#                  Ornek: MAX_PARALLEL=4 bash build-all.sh
 # =============================================================================
 
-set -euo pipefail
+# Not: paralel job + 'wait' ile -e erken cikmaya sebep oldugu icin -e kullanilmiyor;
+# hatalar her modulun status dosyasindan acikca toplaniyor.
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
@@ -28,6 +33,10 @@ SERVICE_MODULES=(
 )
 
 ALL_MODULES=("$COMMON_MODULE" "${SERVICE_MODULES[@]}")
+MVN_FLAGS=(-DskipTests)
+MAX_PARALLEL="${MAX_PARALLEL:-$(nproc 2>/dev/null || echo 4)}"
+LOG_DIR="$(mktemp -d)"
+
 FAILED_MODULES=()
 SUCCESS_COUNT=0
 TOTAL_MODULES=${#ALL_MODULES[@]}
@@ -69,43 +78,16 @@ step_header "Maven Kontrolu"
 if command -v mvn &>/dev/null; then
     MVN_VERSION=$(mvn --version 2>&1 | head -1)
     success_msg "Maven bulundu: $MVN_VERSION"
+    info_msg "Paralellik (MAX_PARALLEL): $MAX_PARALLEL  |  Testler: ATLANIYOR (-DskipTests)"
 else
     failure_msg "Maven bulunamadi! PATH'de mvn oldugundan emin olun."
     exit 1
 fi
 
 # -----------------------------------------------------------------------------
-# Phase 1: Tum modullerde clean
+# Phase 1: common modulunu install et (BARRIER — servisler buna bagimli)
 # -----------------------------------------------------------------------------
-step_header "Phase 1: Tum modullerde mvn clean"
-
-for module in "${ALL_MODULES[@]}"; do
-    info_msg "Cleaning: $module"
-
-    if [ ! -f "$module/pom.xml" ]; then
-        failure_msg "$module/pom.xml bulunamadi, atlaniyor..."
-        FAILED_MODULES+=("$module")
-        continue
-    fi
-
-    pushd "$module" > /dev/null
-    if mvn clean; then
-        success_msg "Clean tamam: $module"
-    else
-        failure_msg "Clean basarisiz: $module"
-        FAILED_MODULES+=("$module")
-    fi
-    popd > /dev/null
-done
-
-if [ ${#FAILED_MODULES[@]} -gt 0 ]; then
-    echo -e "\n${YELLOW}Bazi modullerde clean basarisiz oldu, devam ediliyor...${NC}"
-fi
-
-# -----------------------------------------------------------------------------
-# Phase 2: common modulunu install et
-# -----------------------------------------------------------------------------
-step_header "Phase 2: common modulunde mvn clean install"
+step_header "Phase 1: common -> mvn clean install -DskipTests"
 
 if [ ! -f "$COMMON_MODULE/pom.xml" ]; then
     failure_msg "$COMMON_MODULE/pom.xml bulunamadi!"
@@ -113,39 +95,63 @@ if [ ! -f "$COMMON_MODULE/pom.xml" ]; then
 fi
 
 pushd "$COMMON_MODULE" > /dev/null
-if mvn clean install; then
+if mvn clean install "${MVN_FLAGS[@]}"; then
     success_msg "common install basarili"
     SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
 else
     failure_msg "common install basarisiz! Build durduruldu."
     popd > /dev/null
+    rm -rf "$LOG_DIR"
     exit 1
 fi
 popd > /dev/null
 
 # -----------------------------------------------------------------------------
-# Phase 3: Diger tum modulleri package et
+# Phase 2: Servis modullerini PARALEL package et
 # -----------------------------------------------------------------------------
-step_header "Phase 3: Servis modullerinde mvn clean package"
+step_header "Phase 2: Servis modulleri -> mvn clean package -DskipTests (PARALEL: $MAX_PARALLEL)"
+
+# Bir modulu arka planda build eder; ciktiyi log dosyasina, exit kodunu status dosyasina yazar.
+launch_build() {
+    local module="$1"
+    (
+        cd "$module" && mvn clean package "${MVN_FLAGS[@]}"
+        echo $? > "$LOG_DIR/$module.status"
+    ) > "$LOG_DIR/$module.log" 2>&1 &
+}
 
 for module in "${SERVICE_MODULES[@]}"; do
-    info_msg "Building: $module"
-
     if [ ! -f "$module/pom.xml" ]; then
         failure_msg "$module/pom.xml bulunamadi, atlaniyor..."
         FAILED_MODULES+=("$module")
         continue
     fi
 
-    pushd "$module" > /dev/null
-    if mvn clean package; then
+    # Throttle: ayni anda en fazla MAX_PARALLEL job kossun.
+    while [ "$(jobs -rp | wc -l)" -ge "$MAX_PARALLEL" ]; do
+        wait -n 2>/dev/null || true
+    done
+
+    info_msg "Basladi: $module"
+    launch_build "$module"
+done
+
+# Kalan tum joblarin bitmesini bekle.
+wait 2>/dev/null || true
+
+# Sonuclari topla (status dosyalarindan — wait sirasindan bagimsiz, guvenli).
+for module in "${SERVICE_MODULES[@]}"; do
+    [ -f "$LOG_DIR/$module.status" ] || continue   # pom.xml'i olmayanlar zaten atlandi
+    status="$(cat "$LOG_DIR/$module.status")"
+    if [ "$status" = "0" ]; then
         success_msg "Package basarili: $module"
         SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
     else
         failure_msg "Package basarisiz: $module"
         FAILED_MODULES+=("$module")
+        echo -e "  ${YELLOW}--- $module log (son 25 satir) ---${NC}"
+        tail -25 "$LOG_DIR/$module.log" | sed 's/^/    /'
     fi
-    popd > /dev/null
 done
 
 # -----------------------------------------------------------------------------
@@ -160,6 +166,7 @@ echo -e "  Basarili      : ${GREEN}$SUCCESS_COUNT${NC}"
 if [ ${#FAILED_MODULES[@]} -gt 0 ]; then
     echo -e "  Basarisiz     : ${RED}${#FAILED_MODULES[@]}${NC}"
     echo -e "  Hata alanlar  : ${RED}${FAILED_MODULES[*]}${NC}"
+    echo -e "  Loglar        : ${YELLOW}$LOG_DIR${NC} (incelemek icin saklandi)"
     echo ""
     exit 1
 else
@@ -182,6 +189,7 @@ else
         fi
     done
     echo ""
+    rm -rf "$LOG_DIR"   # basarili build'de gecici loglari temizle
 fi
 
 exit 0

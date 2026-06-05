@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Ortak logback yapilandirmasi (common modulunde → common'a bagimli TUM servislere gecer).
+
+  Amac: IDE'den (local dev) kosan Spring servislerinin loglari Grafana/Loki'de gorunsun.
+  Promtail sadece Docker CONTAINER loglarini okur; IDE'den kosan servis Docker'a hic
+  ugramaz → bu appender logu DOGRUDAN Loki HTTP push API'sine gonderir.
+
+  Profil mantigi:
+    - Prod (SPRING_PROFILES_ACTIVE=docker): Loki appender KAPALI. Servisler container'da
+      kosar, promtail stdout'u toplar. Cift loglama olmasin diye sadece CONSOLE.
+    - Diger her durum (IDE/local): CONSOLE + LOKI.
+
+  Loki URL'i LOKI_URL env ile override edilebilir; varsayilan localhost:3100.
+  Mesaj deseni [traceId,spanId] icerir → Grafana loki.yaml derivedFields bunu yakalayip
+  Tempo trace'ine link verir.
+-->
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="unknown-service"/>
+
+    <property name="LOKI_MSG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"/>
+
+    <!-- Local/dev: dogrudan Loki'ye push -->
+    <springProfile name="!docker">
+        <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+            <http>
+                <url>${LOKI_URL:-http://localhost:3100/loki/api/v1/push}</url>
+            </http>
+            <format>
+                <label>
+                    <pattern>app=${appName},level=%level</pattern>
+                </label>
+                <message>
+                    <pattern>${LOKI_MSG_PATTERN}</pattern>
+                </message>
+            </format>
+            <!-- Loki erisilemezse uygulamayi bloklamasin -->
+            <batchMaxItems>1000</batchMaxItems>
+            <batchTimeoutMs>5000</batchTimeoutMs>
+        </appender>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="LOKI"/>
+        </root>
+    </springProfile>
+
+    <!-- Prod (docker): promtail topluyor; sadece konsol -->
+    <springProfile name="docker">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+</configuration>
