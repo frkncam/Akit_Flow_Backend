@@ -50,8 +50,9 @@ public class AuthServiceImpl implements AuthService {
         UserRequest userReq = request.user();
         OrganizationRequest orgReq = userReq.organization();
 
-        if (userRepository.existsByEmail(userReq.email())) {
-            throw new EmailAlreadyExistsException(userReq.email());
+        String normalizedEmail = userReq.email().toLowerCase();
+        if (userRepository.existsByEmail(normalizedEmail)) {
+            throw new EmailAlreadyExistsException(normalizedEmail);
         }
 
         String slug = SlugUtils.toSlug(orgReq.name());
@@ -64,6 +65,7 @@ public class AuthServiceImpl implements AuthService {
         organization = organizationRepository.save(organization);
 
         User user = userMapper.toEntity(userReq);
+        user.setEmail(normalizedEmail);
         user.setOrganization(organization);
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setRole(UserRole.OWNER);
@@ -78,7 +80,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmail(request.getEmail().toLowerCase())
                 .orElseThrow(InvalidCredentialsException::new);
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
