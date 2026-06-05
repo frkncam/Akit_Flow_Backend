@@ -2,6 +2,7 @@ package com.muhur.common.config;
 
 import com.muhur.common.query.CommonPredicateResolver;
 import com.muhur.common.query.CommonPredicateWebConfig;
+import com.muhur.common.scheduler.FailedEventOps;
 import com.muhur.common.scheduler.FailedEventRetryScheduler;
 import com.muhur.common.tenant.TenantFilterAspect;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -18,7 +19,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EntityScan(basePackages = "com.muhur.common.domain")
 @EnableJpaRepositories(basePackages = "com.muhur.common.repository")
 @ConditionalOnClass(FailedEventRetryScheduler.class)
-@Import(FailedEventRetryScheduler.class)
+@Import({FailedEventOps.class, FailedEventRetryScheduler.class})
 public class CommonAutoConfiguration {
 
     @Bean
