@@ -230,6 +230,8 @@ services:
     environment:
       <<: [*app-env, *db-env]
       APP_MINIO_URL: http://minio:9000
+      APP_MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      APP_MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
     depends_on:
       postgres:
         condition: service_healthy
@@ -309,6 +311,8 @@ services:
     environment:
       <<: [*app-env, *db-env]
       APP_MINIO_URL: http://minio:9000
+      APP_MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      APP_MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
     depends_on:
       postgres:
         condition: service_healthy
