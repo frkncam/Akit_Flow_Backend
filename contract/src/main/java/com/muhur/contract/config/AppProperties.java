@@ -12,7 +12,8 @@ public record AppProperties(
             String accessKey,
             String secretKey,
             String bucket,
-            int presignedUrlExpiryMinutes
+            int presignedUrlExpiryMinutes,
+            String publicUrl
     ) {}
 
     public record Scheduler(
