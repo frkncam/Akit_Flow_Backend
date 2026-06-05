@@ -1,16 +1,13 @@
 package com.muhur.common.scheduler;
 
 import com.muhur.common.domain.FailedEvent;
-import com.muhur.common.repository.FailedEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -24,12 +21,13 @@ public class FailedEventRetryScheduler {
     private static final int TERMINAL_HOURS = 24;
     private static final int PAGE_SIZE = 500;
 
-    private final FailedEventRepository failedEventRepository;
+    private final FailedEventOps ops;
     private final RabbitTemplate rabbitTemplate;
 
     @Scheduled(cron = "0 7 * * * *")
     public void retryFailedEvents() {
-        int terminals = batchMarkTerminals();
+        Instant cutoff = Instant.now().minusSeconds(TERMINAL_HOURS * 3600L);
+        int terminals = ops.markTerminalsOlderThan(cutoff);
         if (terminals > 0) {
             log.info("Batch-marked {} failed events as terminal (older than {}h)", terminals, TERMINAL_HOURS);
         }
@@ -40,7 +38,7 @@ public class FailedEventRetryScheduler {
 
         List<FailedEvent> batch;
         do {
-            batch = loadFailedEvents(page);
+            batch = ops.loadFailedEvents(page, PAGE_SIZE);
             for (FailedEvent fe : batch) {
                 try {
                     byte[] body = fe.getEventJson().getBytes(StandardCharsets.UTF_8);
@@ -49,12 +47,12 @@ public class FailedEventRetryScheduler {
                     Message message = new Message(body, props);
                     rabbitTemplate.send(fe.getExchange(), fe.getRoutingKey(), message);
 
-                    deleteFailedEvent(fe.getId());
+                    ops.deleteFailedEvent(fe.getId());
                     totalSuccess++;
                     log.info("Retried and removed failed event {}: exchange={} rk={}",
                             fe.getId(), fe.getExchange(), fe.getRoutingKey());
                 } catch (Exception e) {
-                    updateRetryState(fe.getId(), e);
+                    ops.updateRetryState(fe.getId(), e);
                     totalRetried++;
                     log.warn("Retry failed for event {} (attempt {}): exchange={} rk={} error={}",
                             fe.getId(), fe.getRetryCount() + 1, fe.getExchange(), fe.getRoutingKey(), e.getMessage());
@@ -66,34 +64,5 @@ public class FailedEventRetryScheduler {
         if (totalSuccess > 0 || totalRetried > 0 || terminals > 0) {
             log.info("Failed event retry cycle: success={} retried={} terminal={}", totalSuccess, totalRetried, terminals);
         }
-    }
-
-    @Transactional
-    public int batchMarkTerminals() {
-        Instant cutoff = Instant.now().minusSeconds(TERMINAL_HOURS * 3600L);
-        return failedEventRepository.markTerminalFailuresOlderThan(cutoff);
-    }
-
-    @Transactional(readOnly = true)
-    public List<FailedEvent> loadFailedEvents(int page) {
-        return failedEventRepository.findByTerminalFailureFalseOrderByCreatedAtAsc(
-                PageRequest.of(page, PAGE_SIZE));
-    }
-
-    @Transactional
-    public void deleteFailedEvent(Long id) {
-        failedEventRepository.deleteById(id);
-    }
-
-    @Transactional
-    public void updateRetryState(Long id, Exception e) {
-        failedEventRepository.findById(id).ifPresent(fe -> {
-            fe.setRetryCount(fe.getRetryCount() + 1);
-            fe.setLastRetryAt(Instant.now());
-            fe.setLastError(e.getMessage() != null
-                    ? e.getMessage().substring(0, Math.min(1024, e.getMessage().length()))
-                    : "Unknown");
-            failedEventRepository.save(fe);
-        });
     }
 }

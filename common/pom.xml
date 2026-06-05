@@ -101,6 +101,16 @@
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-exporter-otlp</artifactId>
         </dependency>
+
+        <!-- Loki log gonderimi: IDE'den (local) kosan servisler logu DOGRUDAN Loki'ye
+             push eder. compile scope → common'a bagimli 7 servise gecsin.
+             Prod'da kapali (logback-spring.xml 'docker' profilinde devre disi) — orada
+             servisler container'da kosar ve promtail stdout'u toplar. -->
+        <dependency>
+            <groupId>com.github.loki4j</groupId>
+            <artifactId>loki-logback-appender</artifactId>
+            <version>1.6.0</version>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
